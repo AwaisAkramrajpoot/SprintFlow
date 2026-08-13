@@ -88,6 +88,9 @@ export const useTaskFlowStore = create((set, get) => {
     activities: workspace.activities,
     selectedProjectId: workspace.projects[0]?.id ?? null,
     activeTaskId: null,
+    apiError: null,
+    apiLoading: false,
+    lastHydratedAt: null,
 
     getSnapshot: () => {
       const state = get();
@@ -145,7 +148,49 @@ export const useTaskFlowStore = create((set, get) => {
         unreadCount: state.notifications.filter((item) => item.unread).length,
         myTasks,
         canManageCompany: canManageCompany(currentUser.role),
+        apiError: state.apiError,
+        apiLoading: state.apiLoading,
       };
+    },
+
+    setApiError: (apiError) => set({ apiError }),
+    setApiLoading: (apiLoading) => set({ apiLoading }),
+
+    hydrateFromServer: (workspace) => {
+      const currentUser = workspace.currentUser || workspace.current_user;
+      const session = currentUser
+        ? {
+            id: currentUser.id,
+            name: currentUser.name || currentUser.full_name,
+            email: currentUser.email,
+            title: currentUser.title || currentUser.role,
+            role: currentUser.role,
+          }
+        : get().session;
+
+      if (session) {
+        writeJson(SESSION_KEY, session);
+      }
+
+      const projects = workspace.projects || [];
+      const selected =
+        get().selectedProjectId &&
+        projects.some((project) => project.id === get().selectedProjectId)
+          ? get().selectedProjectId
+          : projects[0]?.id ?? null;
+
+      set({
+        session,
+        company: workspace.company || get().company,
+        projects,
+        tasks: workspace.tasks || [],
+        members: workspace.members || [],
+        notifications: workspace.notifications || [],
+        activities: workspace.activities || [],
+        selectedProjectId: selected,
+        apiError: null,
+        lastHydratedAt: Date.now(),
+      });
     },
 
     signIn: ({ name, email, role, companyName, mode = "login" }) => {
@@ -287,17 +332,28 @@ export const useTaskFlowStore = create((set, get) => {
         (item) => item.name === task.assignee || item.id === task.assigneeId
       );
 
+      const attachments = (task.files || []).map((file) => ({
+        id: createId("att"),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: file.type?.startsWith("image/") ? URL.createObjectURL(file) : null,
+      }));
+
+      const taskData = { ...task };
+      delete taskData.files;
+
       const newTask = {
         id: createId("tsk"),
         comments: [],
-        attachments: [],
+        attachments,
         checklist: [],
         status: "Backlog",
         priority: "Medium",
         createdBy: state.getSnapshot().currentUser.name,
         assigneeId: member?.id ?? task.assigneeId ?? null,
         assignee: member?.name ?? task.assignee ?? "Unassigned",
-        ...task,
+        ...taskData,
       };
 
       set({

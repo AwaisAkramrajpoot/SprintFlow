@@ -30,20 +30,27 @@ function SettingsPage() {
   });
   const [message, setMessage] = useState("");
 
-  const handleCompanySave = (event) => {
+  const handleCompanySave = async (event) => {
     event.preventDefault();
-    const result = updateCompany(companyForm);
-    setMessage(result.ok ? "Company profile saved." : result.error);
+    const result = await updateCompany(companyForm);
+    setMessage(result?.ok === false ? result.error : "Company profile saved.");
   };
 
-  const handleInvite = (event) => {
+  const handleInvite = async (event) => {
     event.preventDefault();
     if (!inviteForm.email.trim()) return;
-    const result = inviteMember(inviteForm);
-    setMessage(result.ok ? `Invite sent to ${inviteForm.email}.` : result.error);
-    if (result.ok) {
-      setInviteForm({ name: "", email: "", role: "Member" });
+    const result = await inviteMember(inviteForm);
+    if (result?.ok === false) {
+      setMessage(result.error);
+      return;
     }
+    if (result?.invite_token) {
+      const link = `${window.location.origin}/register?invite=${result.invite_token}&email=${encodeURIComponent(inviteForm.email)}`;
+      setMessage(`Invite sent to ${inviteForm.email}. Share this join link if needed: ${link}`);
+    } else {
+      setMessage(`Invite sent to ${inviteForm.email}.`);
+    }
+    setInviteForm({ name: "", email: "", role: "Member" });
   };
 
   return (
@@ -181,12 +188,12 @@ function SettingsPage() {
                     <Select
                       value={member.role}
                       disabled={member.role === "Owner"}
-                      onChange={(event) => {
-                        const result = updateMemberRole(
+                      onChange={async (event) => {
+                        const result = await updateMemberRole(
                           member.id,
                           event.target.value
                         );
-                        if (!result.ok) setMessage(result.error);
+                        if (result?.ok === false) setMessage(result.error);
                       }}
                       className="!py-2"
                     >
@@ -209,9 +216,9 @@ function SettingsPage() {
                       <Button
                         variant="danger"
                         className="!px-3 !py-2 !text-xs"
-                        onClick={() => {
-                          const result = removeMember(member.id);
-                          if (!result.ok) setMessage(result.error);
+                        onClick={async () => {
+                          const result = await removeMember(member.id);
+                          if (result?.ok === false) setMessage(result.error);
                         }}
                       >
                         Remove

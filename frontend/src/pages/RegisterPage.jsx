@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
 import Button from "../components/ui/Button";
@@ -10,35 +10,51 @@ import { useTaskFlowActions } from "../hooks/useTaskFlow";
 function RegisterPage() {
   const { signIn } = useTaskFlowActions();
   const navigate = useNavigate();
-  const [mode, setMode] = useState("create");
+  const [searchParams] = useSearchParams();
+  const inviteFromLink = searchParams.get("invite") || "";
+  const emailFromLink = searchParams.get("email") || "";
+  const [mode, setMode] = useState(inviteFromLink ? "join" : "create");
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: emailFromLink,
     password: "",
     company: "",
+    inviteToken: inviteFromLink,
   });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (
       !formData.name.trim() ||
       !formData.email.trim() ||
       !formData.password.trim() ||
-      (mode === "create" && !formData.company.trim())
+      (mode === "create" && !formData.company.trim()) ||
+      (mode === "join" && !formData.inviteToken.trim())
     ) {
       setError("Please fill in all required fields.");
       return;
     }
 
-    signIn({
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      companyName: formData.company.trim(),
-      role: mode === "create" ? "Owner" : "Member",
-      mode: mode === "create" ? "create" : "join",
-    });
-    navigate("/app/dashboard", { replace: true });
+    setSubmitting(true);
+    setError("");
+    try {
+      await signIn({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        companyName: formData.company.trim(),
+        inviteToken: formData.inviteToken.trim(),
+        role: mode === "create" ? "Owner" : "Member",
+        mode: mode === "create" ? "create" : "join",
+      });
+      navigate("/app/dashboard", { replace: true });
+    } catch (err) {
+      setError(err.message || "Unable to create account.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -113,31 +129,34 @@ function RegisterPage() {
               />
             </Field>
 
-            <Field
-              label={
-                mode === "create" ? "Company name" : "Company invite code / name"
+          <Field
+            label={mode === "create" ? "Company name" : "Invite token"}
+          >
+            <TextInput
+              value={mode === "create" ? formData.company : formData.inviteToken}
+              onChange={(event) =>
+                setFormData((current) =>
+                  mode === "create"
+                    ? { ...current, company: event.target.value }
+                    : { ...current, inviteToken: event.target.value }
+                )
               }
-            >
-              <TextInput
-                value={formData.company}
-                onChange={(event) =>
-                  setFormData((current) => ({
-                    ...current,
-                    company: event.target.value,
-                  }))
-                }
-                placeholder={
-                  mode === "create" ? "Northstar Studio" : "Invite code or company"
-                }
-              />
-            </Field>
+              placeholder={
+                mode === "create" ? "Northstar Studio" : "Paste invite token from email"
+              }
+            />
+          </Field>
 
             {error ? (
               <p className="text-sm text-[var(--tf-danger)]">{error}</p>
             ) : null}
 
-            <Button type="submit" variant="primary" className="w-full py-3">
-              {mode === "create" ? "Create workspace" : "Request access"}
+            <Button type="submit" variant="primary" className="w-full py-3" disabled={submitting}>
+              {submitting
+                ? "Please wait…"
+                : mode === "create"
+                  ? "Create workspace"
+                  : "Join workspace"}
             </Button>
           </form>
 

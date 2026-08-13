@@ -1,8 +1,9 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 import { initials } from "../lib/taskflow";
-import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
+import useTaskFlow, { hydrateWorkspace, useTaskFlowActions } from "../hooks/useTaskFlow";
+import { USE_MOCK_API } from "../api/client";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
 import TaskDetailModal from "./TaskDetailModal";
@@ -17,24 +18,19 @@ const navItems = [
   { to: "/app/settings", label: "Settings", adminOnly: true },
 ];
 
-const navClassName = ({ isActive }) =>
-  [
-    "tf-nav-link rounded-xl px-4 py-3 text-[0.92rem] font-medium transition duration-200",
-    isActive
-      ? "bg-[var(--tf-accent)] text-[var(--tf-accent-ink)]"
-      : "text-[var(--tf-muted)] hover:bg-white/[0.05] hover:text-white",
-  ].join(" ");
-
 function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     currentUser,
     company,
     unreadCount,
     notifications,
     canManageCompany,
+    apiError,
+    apiLoading,
   } = useTaskFlow();
-  const { signOut, markAllNotificationsRead, markNotificationRead } =
+  const { signOut, markAllNotificationsRead, markNotificationRead, closeTask } =
     useTaskFlowActions();
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
@@ -49,9 +45,31 @@ function AppLayout() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
 
+  useEffect(() => {
+    closeTask();
+    // Only react to route changes — not action identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (USE_MOCK_API) return undefined;
+    let cancelled = false;
+    hydrateWorkspace().catch(() => {
+      if (!cancelled) {
+        signOut();
+        navigate("/login", { replace: true });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Bootstrap once when the authenticated shell mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSignOut = () => {
     signOut();
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   const visibleNav = navItems.filter(
@@ -59,9 +77,9 @@ function AppLayout() {
   );
 
   return (
-    <div className="tf-app-shell">
-      <div className="mx-auto grid min-h-screen w-full max-w-[1600px] lg:grid-cols-[270px_1fr]">
-        <aside className="border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] px-5 py-6 backdrop-blur-xl lg:min-h-screen lg:border-b-0 lg:border-r">
+    <div key={location.pathname} className="tf-app-shell">
+      <div className="mx-auto grid min-h-screen w-full max-w-[1600px] lg:grid-cols-[270px_minmax(0,1fr)]">
+        <aside className="relative z-30 border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.92)] px-5 py-6 backdrop-blur-xl lg:sticky lg:top-0 lg:min-h-screen lg:self-start lg:border-b-0 lg:border-r">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--tf-accent)] text-sm font-extrabold tracking-tight text-[var(--tf-accent-ink)]">
               TF
@@ -70,44 +88,59 @@ function AppLayout() {
               <p className="tf-display text-[1.05rem] font-bold text-white">
                 TaskFlow AI
               </p>
-              <p className="text-[0.8rem] text-[var(--tf-muted)]">{company.name}</p>
+              <p className="text-[0.8rem] text-[var(--tf-muted)]">{company?.name}</p>
             </div>
           </div>
 
-          <nav className="mt-9 grid gap-1.5">
-            {visibleNav.map((item) => (
-              <NavLink key={item.to} to={item.to} className={navClassName}>
-                <span className="relative z-[1] flex items-center justify-between gap-3">
-                  {item.label}
+          <nav className="relative z-30 mt-9 grid gap-1.5" aria-label="Main">
+            {visibleNav.map((item) => {
+              const isActive = location.pathname === item.to;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end
+                  onClick={() => {
+                    setShowNotifications(false);
+                    closeTask();
+                  }}
+                  className={[
+                    "tf-nav-link relative z-10 flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-[0.92rem] font-medium transition duration-200",
+                    isActive
+                      ? "bg-[var(--tf-accent)] text-[var(--tf-accent-ink)]"
+                      : "text-[var(--tf-muted)] hover:bg-white/[0.05] hover:text-white",
+                  ].join(" ")}
+                >
+                  <span className="relative z-[1]">{item.label}</span>
                   {item.to === "/app/notifications" && unreadCount > 0 ? (
-                    <Badge tone="sky">{unreadCount}</Badge>
+                    <Badge tone={isActive ? "muted" : "sky"}>{unreadCount}</Badge>
                   ) : null}
-                </span>
-              </NavLink>
-            ))}
+                </NavLink>
+              );
+            })}
           </nav>
 
           <div className="mt-8 rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
             <p className="tf-eyebrow">Workspace</p>
             <div className="mt-3 flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-white">{company.plan} Plan</p>
+                <p className="font-semibold text-white">{company?.plan} Plan</p>
                 <p className="text-[0.82rem] text-[var(--tf-muted)]">
-                  {currentUser.title}
+                  {currentUser?.title}
                 </p>
               </div>
-              <Badge tone="sky">{company.role}</Badge>
+              <Badge tone="sky">{company?.role}</Badge>
             </div>
           </div>
         </aside>
 
-        <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-30 border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.72)] backdrop-blur-xl">
+        <div className="relative z-0 flex min-h-screen min-w-0 flex-col overflow-x-hidden">
+          <header className="sticky top-0 z-20 border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.72)] backdrop-blur-xl">
             <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="tf-eyebrow">Multi-tenant workspace</p>
                 <h1 className="tf-title mt-1.5 text-[1.35rem] md:text-[1.5rem]">
-                  {company.name}
+                  {company?.name}
                 </h1>
               </div>
 
@@ -150,8 +183,8 @@ function AppLayout() {
                             type="button"
                             onClick={() => {
                               markNotificationRead(notification.id);
-                              navigate("/app/notifications");
                               setShowNotifications(false);
+                              navigate("/app/notifications");
                             }}
                             className="tf-hover-lift w-full rounded-xl border border-white/5 bg-white/[0.03] p-3 text-left"
                           >
@@ -178,14 +211,14 @@ function AppLayout() {
 
                 <div className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] px-3 py-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--tf-accent)] text-sm font-bold text-[var(--tf-accent-ink)]">
-                    {initials(currentUser.name)}
+                    {initials(currentUser?.name)}
                   </div>
                   <div className="hidden sm:block">
                     <p className="text-sm font-semibold text-white">
-                      {currentUser.name}
+                      {currentUser?.name}
                     </p>
                     <p className="text-xs text-[var(--tf-muted)]">
-                      {currentUser.email}
+                      {currentUser?.email}
                     </p>
                   </div>
                 </div>
@@ -197,8 +230,16 @@ function AppLayout() {
             </div>
           </header>
 
-          <main className="flex-1 px-5 py-7 md:px-7">
-            <Outlet />
+          <main className="relative z-0 min-w-0 flex-1 px-5 py-7 md:px-7">
+            {apiError ? (
+              <div className="mb-4 rounded-xl border border-[color-mix(in_srgb,var(--tf-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--tf-danger)_12%,transparent)] px-4 py-3 text-sm text-[var(--tf-danger)]">
+                {apiError}
+              </div>
+            ) : null}
+            {apiLoading ? (
+              <p className="mb-4 text-sm text-[var(--tf-faint)]">Syncing with server…</p>
+            ) : null}
+            <Outlet key={location.pathname} />
           </main>
         </div>
       </div>

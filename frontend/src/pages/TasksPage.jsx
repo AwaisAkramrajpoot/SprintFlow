@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
 
+function formatFileSize(bytes) {
+  if (!bytes) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -24,6 +31,8 @@ function TasksPage() {
     status: "Backlog",
     dueDate: "",
   });
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isCreating, setIsCreating] = useState(false);
 
   const filters = {
     projectId: currentProject?.id,
@@ -48,28 +57,46 @@ function TasksPage() {
     });
   }, [projectTasks, query, status, priority, assignee]);
 
-  const handleCreateTask = (event) => {
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    setSelectedFiles((current) => [...current, ...files]);
+    event.target.value = "";
+  };
+
+  const removeSelectedFile = (index) => {
+    setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const handleCreateTask = async (event) => {
     event.preventDefault();
-    if (!formData.title.trim() || !currentProject) return;
+    if (!formData.title.trim() || !currentProject || isCreating) return;
 
-    createTask({
-      projectId: currentProject.id,
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      status: formData.status,
-      priority: formData.priority,
-      assignee: formData.assignee,
-      dueDate: formData.dueDate || new Date().toISOString().slice(0, 10),
-    });
+    setIsCreating(true);
+    try {
+      await createTask({
+        projectId: currentProject.id,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        status: formData.status,
+        priority: formData.priority,
+        assignee: formData.assignee,
+        dueDate: formData.dueDate || new Date().toISOString().slice(0, 10),
+        files: selectedFiles,
+      });
 
-    setFormData({
-      title: "",
-      description: "",
-      assignee: members[0]?.name ?? "",
-      priority: "Medium",
-      status: "Backlog",
-      dueDate: "",
-    });
+      setFormData({
+        title: "",
+        description: "",
+        assignee: members[0]?.name ?? "",
+        priority: "Medium",
+        status: "Backlog",
+        dueDate: "",
+      });
+      setSelectedFiles([]);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -264,8 +291,68 @@ function TasksPage() {
                 />
               </Field>
             </div>
-            <Button type="submit" variant="primary" className="w-full">
-              Create task
+
+            <Field label="Images & files">
+              <div className="space-y-3">
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--tf-border)] bg-white/[0.02] px-4 py-6 text-center transition hover:border-[var(--tf-border-strong)] hover:bg-white/[0.04]">
+                  <span className="text-sm font-medium text-white">
+                    Click to add images or files
+                  </span>
+                  <span className="mt-1 text-xs text-[var(--tf-faint)]">
+                    PNG, JPG, PDF, DOC, TXT and more
+                  </span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip"
+                    onChange={handleFileChange}
+                    className="sr-only"
+                  />
+                </label>
+
+                {selectedFiles.length > 0 ? (
+                  <ul className="space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <li
+                        key={`${file.name}-${index}`}
+                        className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] p-3"
+                      >
+                        {file.type.startsWith("image/") ? (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-500/15 text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-200">
+                            IMG
+                          </div>
+                        ) : (
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/[0.05] text-xs text-[var(--tf-faint)]">
+                            FILE
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-white">{file.name}</p>
+                          <p className="text-xs text-[var(--tf-faint)]">
+                            {formatFileSize(file.size)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeSelectedFile(index)}
+                          className="rounded-lg px-2 py-1 text-xs text-[var(--tf-faint)] transition hover:bg-white/5 hover:text-white"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </Field>
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              disabled={isCreating}
+            >
+              {isCreating ? "Creating…" : "Create task"}
             </Button>
           </form>
         </Card>

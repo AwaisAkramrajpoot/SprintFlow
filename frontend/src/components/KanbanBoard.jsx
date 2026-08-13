@@ -1,49 +1,38 @@
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
   PointerSensor,
+  TouchSensor,
+  closestCorners,
   useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  verticalListSortingStrategy,
+  arrayMove,
   useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { boardStatuses, relativeDueLabel } from "../lib/taskflow";
 import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
 import Badge from "./ui/Badge";
-import Card from "./ui/Card";
 
-function TaskCard({ task, onOpen }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: task.id,
-      data: { type: "task", status: task.status },
-    });
+function buildColumnMap(tasks) {
+  return boardStatuses.reduce((acc, status) => {
+    acc[status] = tasks
+      .filter((task) => task.status === status)
+      .map((task) => String(task.id));
+    return acc;
+  }, {});
+}
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
+function CardBody({ task }) {
   return (
-    <article
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      onClick={() => onOpen(task.id)}
-      className={[
-        "tf-kanban-card cursor-grab rounded-2xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.75)] p-4",
-        isDragging ? "opacity-40" : "",
-      ].join(" ")}
-    >
+    <>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[0.95rem] font-semibold text-white">{task.title}</p>
@@ -65,12 +54,69 @@ function TaskCard({ task, onOpen }) {
         <span>{(task.comments || []).length} comments</span>
         <span>{(task.attachments || []).length} files</span>
       </div>
+    </>
+  );
+}
+
+function TaskCard({ task, onOpen }) {
+  const wasDragging = useRef(false);
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: String(task.id),
+    data: { type: "task", status: task.status },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.35 : 1,
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      wasDragging.current = true;
+    }
+  }, [isDragging]);
+
+  return (
+    <article
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => {
+        if (wasDragging.current) {
+          wasDragging.current = false;
+          return;
+        }
+        onOpen(task.id);
+      }}
+      className={[
+        "tf-kanban-card cursor-grab rounded-2xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.75)] p-4 active:cursor-grabbing",
+        isDragging ? "tf-kanban-card--dragging" : "",
+      ].join(" ")}
+    >
+      <CardBody task={task} />
     </article>
   );
 }
 
-function DroppableColumn({ id, children, title, count }) {
-  const { setNodeRef, isOver } = useDroppable({
+function OverlayCard({ task }) {
+  return (
+    <article className="tf-kanban-card tf-kanban-card--dragging box-border h-full w-full cursor-grabbing rounded-2xl border border-[var(--tf-border-strong)] bg-[rgba(6,16,24,0.95)] p-4 shadow-2xl ring-1 ring-[var(--tf-border-strong)]">
+      <CardBody task={task} />
+    </article>
+  );
+}
+
+function DroppableColumn({ id, children, title, count, isOver }) {
+  const { setNodeRef } = useDroppable({
     id,
     data: { type: "column", status: id },
   });
@@ -79,7 +125,7 @@ function DroppableColumn({ id, children, title, count }) {
     <div
       ref={setNodeRef}
       className={[
-        "rounded-[1.5rem] border border-[var(--tf-border)] bg-white/[0.03] p-4 transition duration-200",
+        "flex min-h-[420px] flex-col rounded-[1.5rem] border border-[var(--tf-border)] bg-white/[0.03] p-4 transition duration-200",
         isOver ? "border-[var(--tf-border-strong)] bg-[var(--tf-accent-soft)]" : "",
       ].join(" ")}
     >
@@ -90,7 +136,7 @@ function DroppableColumn({ id, children, title, count }) {
         </div>
         <Badge tone="muted">{count}</Badge>
       </div>
-      <div className="min-h-24 space-y-3">{children}</div>
+      <div className="flex flex-1 flex-col gap-3">{children}</div>
     </div>
   );
 }
@@ -98,43 +144,135 @@ function DroppableColumn({ id, children, title, count }) {
 function KanbanBoard() {
   const { projectTasks, currentProject } = useTaskFlow();
   const { moveTask, openTask } = useTaskFlowActions();
-  const [activeTaskId, setActiveTaskId] = useState(null);
+  const [activeId, setActiveId] = useState(null);
+  const [overColumnId, setOverColumnId] = useState(null);
+  const [previewItems, setPreviewItems] = useState(null);
+  const baseColumnItems = useMemo(
+    () => buildColumnMap(projectTasks),
+    [projectTasks]
+  );
+  const columnItems = previewItems ?? baseColumnItems;
+  const columnItemsRef = useRef(columnItems);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 180, tolerance: 6 },
     })
   );
 
-  const tasksByStatus = boardStatuses.reduce((acc, status) => {
-    acc[status] = projectTasks.filter((task) => task.status === status);
-    return acc;
-  }, {});
+  const taskMap = useMemo(
+    () => new Map(projectTasks.map((task) => [String(task.id), task])),
+    [projectTasks]
+  );
 
-  const activeTask = activeTaskId
-    ? projectTasks.find((task) => task.id === activeTaskId)
-    : null;
+  useEffect(() => {
+    columnItemsRef.current = columnItems;
+  }, [columnItems]);
 
-  const resolveStatus = (over) => {
-    if (!over) return null;
-    if (boardStatuses.includes(over.id)) return over.id;
-    if (over.data.current?.status) return over.data.current.status;
-    const task = projectTasks.find((item) => item.id === over.id);
-    return task?.status ?? null;
+  const activeTask = activeId ? taskMap.get(String(activeId)) : null;
+
+  const findColumn = (id, items = columnItemsRef.current) => {
+    if (id == null) return null;
+    const key = String(id);
+    if (boardStatuses.includes(key)) return key;
+    for (const status of boardStatuses) {
+      if (items[status]?.includes(key)) return status;
+    }
+    return taskMap.get(key)?.status ?? null;
+  };
+
+  const handleDragStart = ({ active }) => {
+    setActiveId(String(active.id));
+    setPreviewItems(baseColumnItems);
+  };
+
+  const handleDragOver = ({ active, over }) => {
+    if (!over) {
+      setOverColumnId(null);
+      return;
+    }
+
+    const activeKey = String(active.id);
+    const overKey = String(over.id);
+    const items = columnItemsRef.current;
+    const activeColumn = findColumn(activeKey, items);
+    const overColumn = findColumn(overKey, items);
+
+    if (!activeColumn || !overColumn) return;
+    setOverColumnId(overColumn);
+
+    if (activeColumn === overColumn) {
+      const list = items[activeColumn];
+      const oldIndex = list.indexOf(activeKey);
+      const newIndex = list.indexOf(overKey);
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+
+      const next = {
+        ...items,
+        [activeColumn]: arrayMove(list, oldIndex, newIndex),
+      };
+      columnItemsRef.current = next;
+      setPreviewItems(next);
+      return;
+    }
+
+    const source = [...items[activeColumn]];
+    const destination = [...items[overColumn]];
+    const fromIndex = source.indexOf(activeKey);
+    if (fromIndex < 0) return;
+
+    source.splice(fromIndex, 1);
+
+    if (boardStatuses.includes(overKey)) {
+      destination.push(activeKey);
+    } else {
+      const toIndex = destination.indexOf(overKey);
+      destination.splice(toIndex >= 0 ? toIndex : destination.length, 0, activeKey);
+    }
+
+    const next = {
+      ...items,
+      [activeColumn]: source,
+      [overColumn]: destination,
+    };
+    columnItemsRef.current = next;
+    setPreviewItems(next);
+  };
+
+  const handleDragEnd = ({ active }) => {
+    const taskId = String(active.id);
+    const destinationColumn = findColumn(taskId, columnItemsRef.current);
+    const task = taskMap.get(taskId);
+
+    setActiveId(null);
+    setOverColumnId(null);
+
+    if (destinationColumn && task && task.status !== destinationColumn) {
+      void moveTask(task.id, destinationColumn);
+      setPreviewItems(null);
+      return;
+    }
+
+    setPreviewItems(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setOverColumnId(null);
+    setPreviewItems(null);
   };
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
-      onDragStart={({ active }) => setActiveTaskId(active.id)}
-      onDragEnd={({ active, over }) => {
-        setActiveTaskId(null);
-        const destinationStatus = resolveStatus(over);
-        if (destinationStatus) {
-          moveTask(active.id, destinationStatus);
-        }
-      }}
-      onDragCancel={() => setActiveTaskId(null)}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -143,40 +281,51 @@ function KanbanBoard() {
             <h2 className="tf-title mt-2 text-2xl md:text-[1.85rem]">
               {currentProject?.name ?? "No project selected"}
             </h2>
+            <p className="mt-1 text-sm text-[var(--tf-faint)]">
+              Drag a card to another column to update its status.
+            </p>
           </div>
           <Badge tone="sky">{currentProject?.status ?? "—"}</Badge>
         </div>
 
-        <div className="tf-stagger grid gap-4 xl:grid-cols-4">
+        <div className="grid gap-4 xl:grid-cols-4">
           {boardStatuses.map((status) => (
-            <SortableContext
+            <DroppableColumn
               key={status}
-              items={tasksByStatus[status].map((task) => task.id)}
-              strategy={verticalListSortingStrategy}
+              id={status}
+              title={status}
+              count={columnItems[status].length}
+              isOver={overColumnId === status}
             >
-              <DroppableColumn
-                id={status}
-                title={status}
-                count={tasksByStatus[status].length}
+              <SortableContext
+                items={columnItems[status]}
+                strategy={verticalListSortingStrategy}
               >
-                {tasksByStatus[status].map((task) => (
-                  <TaskCard key={task.id} task={task} onOpen={openTask} />
-                ))}
-              </DroppableColumn>
-            </SortableContext>
+                {columnItems[status].map((taskId) => {
+                  const task = taskMap.get(taskId);
+                  if (!task) return null;
+                  return (
+                    <TaskCard
+                      key={taskId}
+                      task={{ ...task, status }}
+                      onOpen={openTask}
+                    />
+                  );
+                })}
+              </SortableContext>
+
+              {columnItems[status].length === 0 ? (
+                <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-[var(--tf-border)] px-4 py-10 text-center text-sm text-[var(--tf-faint)]">
+                  Drop tasks here
+                </div>
+              ) : null}
+            </DroppableColumn>
           ))}
         </div>
       </div>
 
-      <DragOverlay>
-        {activeTask ? (
-          <Card className="w-[320px] border-[var(--tf-border-strong)]">
-            <p className="text-sm font-semibold text-white">{activeTask.title}</p>
-            <p className="mt-2 text-sm text-[var(--tf-muted)]">
-              {activeTask.description}
-            </p>
-          </Card>
-        ) : null}
+      <DragOverlay dropAnimation={null}>
+        {activeTask ? <OverlayCard task={activeTask} /> : null}
       </DragOverlay>
     </DndContext>
   );

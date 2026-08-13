@@ -10,7 +10,7 @@ function BoardPage() {
   const { setSelectedProjectId } = useTaskFlowActions();
 
   return (
-    <PageShell>
+    <PageShell noAnimation>
       <SectionHeading
         eyebrow="Board"
         title="Kanban view with drag and drop"

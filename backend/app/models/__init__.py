@@ -1,1 +1,14 @@
-"""SQLAlchemy models will be imported here as they are added."""
+from app.models.entities import (  # noqa: F401
+    Attachment,
+    Board,
+    Comment,
+    Company,
+    CompanyInvite,
+    CompanyMember,
+    Notification,
+    Project,
+    RefreshToken,
+    Task,
+    TaskColumn,
+    User,
+)

@@ -12,25 +12,35 @@ function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState({
-    email: "aliyan@example.com",
-    password: "demo-password",
+    email: "",
+    password: "",
   });
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const from = location.state?.from?.pathname || "/app/dashboard";
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.email.trim() || !formData.password.trim()) {
       setError("Email and password are required.");
       return;
     }
 
-    signIn({
-      email: formData.email.trim(),
-      mode: "login",
-    });
-    navigate(from, { replace: true });
+    setSubmitting(true);
+    setError("");
+    try {
+      await signIn({
+        email: formData.email.trim(),
+        password: formData.password,
+        mode: "login",
+      });
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message || "Unable to sign in.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -42,8 +52,8 @@ function LoginPage() {
             Welcome back
           </h1>
           <p className="mt-3 text-[1.02rem] text-[var(--tf-muted)]">
-            Enter the TaskFlow workspace. Demo auth maps your email to a seeded
-            member role.
+            Sign in with your TaskFlow account. JWT access and refresh tokens
+            are issued by the FastAPI backend.
           </p>
 
           <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
@@ -78,8 +88,8 @@ function LoginPage() {
               <p className="text-sm text-[var(--tf-danger)]">{error}</p>
             ) : null}
 
-            <Button type="submit" variant="primary" className="w-full py-3">
-              Enter workspace
+            <Button type="submit" variant="primary" className="w-full py-3" disabled={submitting}>
+              {submitting ? "Signing in…" : "Enter workspace"}
             </Button>
           </form>
 
@@ -91,10 +101,10 @@ function LoginPage() {
           </p>
 
           <div className="mt-6 rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4 text-sm text-[var(--tf-muted)]">
-            <p className="font-semibold text-white">Demo accounts</p>
-            <p className="mt-2">Owner: aliyan@example.com</p>
-            <p>Admin: sara@example.com</p>
-            <p>Member: ayesha@example.com</p>
+            <p className="font-semibold text-white">Create an account first</p>
+            <p className="mt-2">
+              Register a company workspace, then invite teammates from Settings.
+            </p>
           </div>
         </Card>
 

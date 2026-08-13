@@ -20,11 +20,11 @@ function ProjectsPage() {
     dueDate: "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.name.trim()) return;
 
-    createProject({
+    await createProject({
       name: formData.name.trim(),
       description: formData.description.trim(),
       dueDate: formData.dueDate || undefined,

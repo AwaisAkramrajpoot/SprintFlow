@@ -1,1 +1,11 @@
-
+from app.services import attachment_service as attachment_service
+from app.services import auth_service as auth_service
+from app.services import board_service as board_service
+from app.services import comment_service as comment_service
+from app.services import company_service as company_service
+from app.services import email_service as email_service
+from app.services import notification_service as notification_service
+from app.services import project_service as project_service
+from app.services import search_service as search_service
+from app.services import task_service as task_service
+from app.services import workspace_service as workspace_service

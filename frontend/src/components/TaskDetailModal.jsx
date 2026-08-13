@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { getBackendOrigin, USE_MOCK_API } from "../api/client";
 import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
 import {
   boardStatuses,
@@ -56,6 +57,14 @@ function TaskDetailModal() {
 
   const handleAddAttachment = (event) => {
     event.preventDefault();
+    const fileInput = event.currentTarget.elements.namedItem("attachmentFile");
+    const file = fileInput?.files?.[0];
+    if (file) {
+      addAttachment(activeTask.id, { file, name: file.name });
+      event.currentTarget.reset();
+      setAttachmentName("");
+      return;
+    }
     if (!attachmentName.trim()) return;
     addAttachment(activeTask.id, {
       name: attachmentName.trim(),
@@ -173,7 +182,18 @@ function TaskDetailModal() {
                     >
                       <div>
                         <p className="text-sm font-medium text-white">
-                          {file.name}
+                          {file.file_url && !USE_MOCK_API ? (
+                            <a
+                              href={`${getBackendOrigin()}${file.file_url}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[var(--tf-accent)] hover:underline"
+                            >
+                              {file.name}
+                            </a>
+                          ) : (
+                            file.name
+                          )}
                         </p>
                         <p className="text-xs text-[var(--tf-faint)]">
                           {file.size} · {file.uploadedBy} · {file.uploadedAt}
@@ -192,15 +212,22 @@ function TaskDetailModal() {
                   ))
                 )}
               </div>
-              <form className="mt-4 flex gap-2" onSubmit={handleAddAttachment}>
-                <TextInput
-                  value={attachmentName}
-                  onChange={(event) => setAttachmentName(event.target.value)}
-                  placeholder="Filename (mock upload)"
+              <form className="mt-4 space-y-2" onSubmit={handleAddAttachment}>
+                <input
+                  name="attachmentFile"
+                  type="file"
+                  className="w-full text-sm text-[var(--tf-muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--tf-accent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--tf-accent-ink)]"
                 />
-                <Button type="submit" variant="secondary">
-                  Attach
-                </Button>
+                <div className="flex gap-2">
+                  <TextInput
+                    value={attachmentName}
+                    onChange={(event) => setAttachmentName(event.target.value)}
+                    placeholder="Or attach a named note"
+                  />
+                  <Button type="submit" variant="secondary">
+                    Attach
+                  </Button>
+                </div>
               </form>
             </div>
           </div>

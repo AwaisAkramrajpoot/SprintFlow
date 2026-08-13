@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 
 import AppLayout from "../components/AppLayout";
 import RequireAuth from "../components/RequireAuth";
@@ -35,6 +42,16 @@ function PublicLayout() {
   );
 }
 
+function ProtectedLayout() {
+  const location = useLocation();
+
+  return (
+    <RequireAuth>
+      <AppLayout key={location.pathname} />
+    </RequireAuth>
+  );
+}
+
 function AppRoutes() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -46,15 +63,8 @@ function AppRoutes() {
             <Route path="/register" element={<RegisterPage />} />
           </Route>
 
-          <Route
-            path="/app"
-            element={
-              <RequireAuth>
-                <AppLayout />
-              </RequireAuth>
-            }
-          >
-            <Route index element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/app" element={<ProtectedLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="board" element={<BoardPage />} />

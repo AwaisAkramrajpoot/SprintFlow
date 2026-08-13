@@ -183,12 +183,14 @@ h3,
 .tf-nav-link {
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .tf-nav-link::before {
   content: "";
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(62, 196, 240, 0.08), transparent);
   transform: translateX(-120%);
   transition: transform 480ms ease;
@@ -207,15 +209,16 @@ h3,
 }
 
 .tf-kanban-card {
+  touch-action: none;
   transition:
-    transform 180ms ease,
     border-color 180ms ease,
-    background-color 180ms ease;
+    background-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.tf-kanban-card:hover {
-  transform: translateY(-3px);
+.tf-kanban-card:hover:not(.tf-kanban-card--dragging) {
   border-color: rgba(62, 196, 240, 0.35);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
 }
 
 .tf-pulse-dot {
