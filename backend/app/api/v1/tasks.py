@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import ANY_MEMBER, MANAGER_PLUS, AuthContext
@@ -12,6 +12,12 @@ from app.schemas.taskflow import (
     TaskUpdate,
 )
 from app.services import task_service
+from app.services.broadcast_service import (
+    broadcast_task_created,
+    broadcast_task_deleted,
+    broadcast_task_moved,
+    broadcast_task_updated,
+)
 from app.services.serializers import task_to_dict
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -57,6 +63,7 @@ def list_tasks(
 @router.post("", response_model=TaskResponse)
 def create_task(
     payload: TaskCreate,
+    background: BackgroundTasks,
     ctx: AuthContext = Depends(ANY_MEMBER),
     db: Session = Depends(get_db),
 ):
@@ -75,6 +82,7 @@ def create_task(
         assignee_id=payload.assignee_id,
         assignee=payload.assignee,
     )
+    background.add_task(broadcast_task_created, task)
     return _task(task)
 
 
@@ -91,6 +99,7 @@ def get_task(
 def update_task(
     task_id: str,
     payload: TaskUpdate,
+    background: BackgroundTasks,
     ctx: AuthContext = Depends(ANY_MEMBER),
     db: Session = Depends(get_db),
 ):
@@ -104,6 +113,7 @@ def update_task(
         if ROLE_RANK.get(ctx.role, 0) < ROLE_RANK[MemberRole.MANAGER.value]:
             raise forbidden("Assigning tasks requires Manager or above")
     updated = task_service.update_task(db, ctx.company.id, ctx.user, task, data)
+    background.add_task(broadcast_task_updated, updated)
     return _task(updated)
 
 
@@ -111,6 +121,7 @@ def update_task(
 def move_task(
     task_id: str,
     payload: TaskMoveRequest,
+    background: BackgroundTasks,
     ctx: AuthContext = Depends(ANY_MEMBER),
     db: Session = Depends(get_db),
 ):
@@ -118,6 +129,7 @@ def move_task(
     moved = task_service.move_task(
         db, ctx.company.id, task, column_id=payload.column_id, status=payload.status
     )
+    background.add_task(broadcast_task_moved, moved)
     return _task(moved)
 
 
@@ -125,6 +137,7 @@ def move_task(
 def assign_task(
     task_id: str,
     payload: TaskAssignRequest,
+    background: BackgroundTasks,
     ctx: AuthContext = Depends(MANAGER_PLUS),
     db: Session = Depends(get_db),
 ):
@@ -132,15 +145,20 @@ def assign_task(
     assigned = task_service.assign_task(
         db, ctx.company.id, ctx.user, task, payload.assignee_id, payload.assignee
     )
+    background.add_task(broadcast_task_updated, assigned)
     return _task(assigned)
 
 
 @router.delete("/{task_id}", response_model=MessageResponse)
 def delete_task(
     task_id: str,
+    background: BackgroundTasks,
     ctx: AuthContext = Depends(ANY_MEMBER),
     db: Session = Depends(get_db),
 ):
     task = task_service.get_company_task(db, ctx.company.id, task_id)
+    project_id = task.board.project_id if task.board else None
     task_service.delete_task(db, task)
+    if project_id:
+        background.add_task(broadcast_task_deleted, ctx.company.id, project_id, task_id)
     return MessageResponse(message="Task deleted")

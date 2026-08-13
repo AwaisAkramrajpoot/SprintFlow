@@ -72,6 +72,38 @@ async function refreshAccessToken() {
   return true;
 }
 
+export { refreshAccessToken };
+
+function decodeJwtPayload(token) {
+  try {
+    const segment = token.split(".")[1];
+    if (!segment) return null;
+    return JSON.parse(atob(segment.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+}
+
+export function isAccessTokenExpired(bufferSeconds = 30) {
+  const token = getAccessToken();
+  if (!token) return true;
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now() + bufferSeconds * 1000;
+}
+
+/** Return a valid access token, refreshing via refresh_token when needed. */
+export async function ensureAccessToken() {
+  if (getAccessToken() && !isAccessTokenExpired()) {
+    return getAccessToken();
+  }
+  if (getRefreshToken()) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) return getAccessToken();
+  }
+  return getAccessToken();
+}
+
 export async function apiRequest(path, options = {}, retry = true) {
   const headers = { ...(options.headers || {}) };
   const isForm = options.body instanceof FormData;

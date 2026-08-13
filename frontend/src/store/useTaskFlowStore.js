@@ -429,6 +429,51 @@ export const useTaskFlowStore = create((set, get) => {
       persistWorkspace(get());
     },
 
+    applyRemoteTaskEvent: (event) => {
+      const state = get();
+      const projectId = event.project_id || event.projectId;
+      if (
+        projectId &&
+        state.selectedProjectId &&
+        projectId !== state.selectedProjectId
+      ) {
+        return;
+      }
+
+      if (event.type === "task.deleted") {
+        const taskId = event.task_id || event.taskId;
+        if (!taskId) return;
+        set({
+          tasks: state.tasks.filter((item) => item.id !== taskId),
+          activeTaskId:
+            state.activeTaskId === taskId ? null : state.activeTaskId,
+        });
+        return;
+      }
+
+      const incoming = event.task;
+      if (!incoming?.id) return;
+
+      const normalized = {
+        comments: [],
+        attachments: [],
+        checklist: [],
+        ...incoming,
+        projectId: incoming.projectId || incoming.project_id,
+        dueDate: incoming.dueDate || incoming.due_date,
+        assigneeId: incoming.assigneeId || incoming.assignee_id,
+      };
+
+      const exists = state.tasks.some((item) => item.id === normalized.id);
+      const tasks = exists
+        ? state.tasks.map((item) =>
+            item.id === normalized.id ? { ...item, ...normalized } : item
+          )
+        : [normalized, ...state.tasks];
+
+      set({ tasks, lastHydratedAt: Date.now() });
+    },
+
     deleteTask: (taskId) => {
       const state = get();
       const task = state.tasks.find((item) => item.id === taskId);

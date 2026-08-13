@@ -10,6 +10,7 @@ from app.core.exception_handlers import register_exception_handlers
 from app.core.extended_settings import extended_settings
 from app.core.logging_config import configure_logging
 from app.core.middleware import RequestLoggingMiddleware
+from app.websocket.routes import router as ws_router
 
 configure_logging()
 
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+app.include_router(ws_router)
 
 upload_path = Path(extended_settings.upload_dir)
 upload_path.mkdir(parents=True, exist_ok=True)

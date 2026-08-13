@@ -60,6 +60,48 @@ def invite_email(company_name: str, role: str, invite_url: str) -> tuple[str, st
     return subject, body
 
 
+def task_assignment_email(
+    assignee_name: str, task_title: str, actor_name: str, board_url: str
+) -> tuple[str, str]:
+    subject = f"New assignment: {task_title}"
+    body = _html_shell(
+        "You've been assigned a task",
+        f"Hi {assignee_name}, <strong style='color:#e8f2f7'>{actor_name}</strong> assigned "
+        f"<strong style='color:#e8f2f7'>{task_title}</strong> to you. "
+        f"<p style='margin-top:20px'><a href='{board_url}' "
+        f"style='background:#3ec4f0;color:#041018;text-decoration:none;padding:12px 18px;"
+        f"border-radius:10px;font-weight:600;'>Open board</a></p>",
+    )
+    return subject, body
+
+
+def daily_digest_email(assignee_name: str, task_lines: list[str]) -> tuple[str, str]:
+    subject = "Your tasks due today — TaskFlow AI"
+    items = "".join(task_lines)
+    body = _html_shell(
+        "Daily digest",
+        f"Hi {assignee_name}, here are your tasks due today:"
+        f"<ul style='margin-top:16px;padding-left:20px;color:#e8f2f7'>{items}</ul>"
+        f"<p style='margin-top:20px'>Open your workspace at "
+        f"{extended_settings.frontend_url}/app/tasks</p>",
+    )
+    return subject, body
+
+
+def overdue_task_email(
+    assignee_name: str, task_title: str, due_date: str
+) -> tuple[str, str]:
+    subject = f"Overdue: {task_title}"
+    body = _html_shell(
+        "Task overdue",
+        f"Hi {assignee_name}, <strong style='color:#f07178'>{task_title}</strong> was due on "
+        f"<strong style='color:#e8f2f7'>{due_date}</strong> and is still open. "
+        f"<p style='margin-top:20px'>Review it at "
+        f"{extended_settings.frontend_url}/app/board</p>",
+    )
+    return subject, body
+
+
 def send_email(to_email: str, subject: str, html_body: str) -> None:
     if not extended_settings.smtp_host or not extended_settings.smtp_from_email:
         logger.warning("SMTP is not configured; skipping email to %s", to_email)

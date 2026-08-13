@@ -7,12 +7,33 @@ from app.core.enums import TaskPriority
 from app.core.exceptions import bad_request, not_found
 from app.models.entities import Attachment, Board, Comment, Notification, Task, TaskColumn, User
 from app.services.project_service import get_company_project
+from app.workers.dispatch import enqueue_task_assignment_email
 
 
 def _notify(db: Session, user_id: str | None, message: str) -> None:
     if not user_id:
         return
     db.add(Notification(user_id=user_id, message=message, is_read=False))
+
+
+def _notify_assignment(
+    db: Session,
+    *,
+    assignee_id: str | None,
+    actor: User,
+    task_title: str,
+) -> None:
+    if not assignee_id or assignee_id == actor.id:
+        return
+    _notify(db, assignee_id, f"{actor.full_name} assigned '{task_title}' to you.")
+    assignee = db.get(User, assignee_id)
+    if assignee and assignee.email:
+        enqueue_task_assignment_email(
+            assignee_email=assignee.email,
+            assignee_name=assignee.full_name,
+            task_title=task_title,
+            actor_name=actor.full_name,
+        )
 
 
 def get_company_task(db: Session, company_id: str, task_id: str) -> Task:
@@ -197,7 +218,12 @@ def create_task(
     )
     db.add(task)
     if resolved_assignee and resolved_assignee != actor.id:
-        _notify(db, resolved_assignee, f"{actor.full_name} assigned '{task.title}' to you.")
+        _notify_assignment(
+            db,
+            assignee_id=resolved_assignee,
+            actor=actor,
+            task_title=task.title,
+        )
     db.commit()
     return get_company_task(db, company_id, task.id)
 
@@ -220,10 +246,11 @@ def update_task(db: Session, company_id: str, actor: User, task: Task, payload: 
         if new_assignee != task.assignee_id:
             task.assignee_id = new_assignee
             if new_assignee and new_assignee != actor.id:
-                _notify(
+                _notify_assignment(
                     db,
-                    new_assignee,
-                    f"{actor.full_name} assigned '{task.title}' to you.",
+                    assignee_id=new_assignee,
+                    actor=actor,
+                    task_title=task.title,
                 )
 
     if payload.get("column_id") or payload.get("status"):
@@ -278,7 +305,12 @@ def assign_task(
     resolved = _resolve_assignee(db, company_id, assignee_id, assignee)
     task.assignee_id = resolved
     if resolved and resolved != actor.id:
-        _notify(db, resolved, f"{actor.full_name} assigned '{task.title}' to you.")
+        _notify_assignment(
+            db,
+            assignee_id=resolved,
+            actor=actor,
+            task_title=task.title,
+        )
     db.commit()
     return get_company_task(db, company_id, task.id)
 

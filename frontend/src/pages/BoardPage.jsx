@@ -2,6 +2,7 @@ import Card from "../components/ui/Card";
 import PageShell from "../components/PageShell";
 import SectionHeading from "../components/SectionHeading";
 import KanbanBoard from "../components/KanbanBoard";
+import useBoardWebSocket from "../hooks/useBoardWebSocket";
 import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
 import { Select } from "../components/ui/Field";
 
@@ -9,12 +10,14 @@ function BoardPage() {
   const { selectedProjectId, projects } = useTaskFlow();
   const { setSelectedProjectId } = useTaskFlowActions();
 
+  useBoardWebSocket(selectedProjectId);
+
   return (
     <PageShell noAnimation>
       <SectionHeading
         eyebrow="Board"
         title="Kanban view with drag and drop"
-        description="Move tasks between Backlog, In Progress, Review, and Done. Open any card for comments, attachments, assignee, and due date."
+        description="Move tasks between Backlog, In Progress, Review, and Done. Changes sync live across teammates on this board."
       />
 
       <Card className="p-5">

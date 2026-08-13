@@ -59,6 +59,7 @@ export function useTaskFlowActions() {
       createTask: state.createTask,
       updateTask: state.updateTask,
       moveTask: state.moveTask,
+      applyRemoteTaskEvent: state.applyRemoteTaskEvent,
       deleteTask: state.deleteTask,
       addComment: state.addComment,
       deleteComment: state.deleteComment,
