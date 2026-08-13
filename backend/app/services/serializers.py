@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import mimetypes
 
 from app.models.entities import Attachment, Comment, Notification, Project, Task, User
 
@@ -49,12 +50,16 @@ def attachment_to_dict(item: Attachment) -> dict:
     size = f"{item.size_bytes} B" if item.size_bytes else "—"
     if item.size_bytes and item.size_bytes >= 1024:
         size = f"{item.size_bytes / 1024:.1f} KB"
+    content_type, _ = mimetypes.guess_type(item.original_name or "")
     return {
         "id": item.id,
         "task_id": item.task_id,
         "file_url": item.file_url,
         "name": item.original_name,
+        "content_type": content_type,
+        "contentType": content_type,
         "size": size,
+        "size_bytes": item.size_bytes,
         "uploadedBy": item.uploader.full_name if item.uploader else None,
         "uploaded_by": item.uploader.full_name if item.uploader else None,
         "uploadedAt": item.created_at.date().isoformat() if item.created_at else None,

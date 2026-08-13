@@ -332,13 +332,18 @@ export const useTaskFlowStore = create((set, get) => {
         (item) => item.name === task.assignee || item.id === task.assigneeId
       );
 
-      const attachments = (task.files || []).map((file) => ({
-        id: createId("att"),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: file.type?.startsWith("image/") ? URL.createObjectURL(file) : null,
-      }));
+      const attachments = (task.files || []).map((file) => {
+        const preview = file.type?.startsWith("image/") ? URL.createObjectURL(file) : null;
+        return {
+          id: createId("att"),
+          name: file.name,
+          size: file.size,
+          content_type: file.type,
+          contentType: file.type,
+          file_url: preview,
+          url: preview,
+        };
+      });
 
       const taskData = { ...task };
       delete taskData.files;
@@ -491,12 +496,19 @@ export const useTaskFlowStore = create((set, get) => {
     addAttachment: (taskId, attachment) => {
       const state = get();
       const user = state.getSnapshot().currentUser;
+      const file = attachment.file;
+      const previewUrl =
+        file && file.type?.startsWith("image/") ? URL.createObjectURL(file) : null;
       const next = {
         id: createId("a"),
         uploadedBy: user.name,
         uploadedAt: new Date().toISOString().slice(0, 10),
-        size: attachment.size || "—",
-        name: attachment.name,
+        size: attachment.size || file?.size || "—",
+        name: attachment.name || file?.name || "Attachment",
+        content_type: file?.type,
+        contentType: file?.type,
+        file_url: previewUrl,
+        url: previewUrl,
       };
 
       set({

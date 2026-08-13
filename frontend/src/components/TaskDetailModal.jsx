@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { getBackendOrigin, USE_MOCK_API } from "../api/client";
+import AttachmentItem from "./AttachmentItem";
 import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
 import {
   boardStatuses,
@@ -176,39 +176,13 @@ function TaskDetailModal() {
                   <p className="text-sm text-[var(--tf-muted)]">No files attached.</p>
                 ) : (
                   attachments.map((file) => (
-                    <div
+                    <AttachmentItem
                       key={file.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] px-3 py-2"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {file.file_url && !USE_MOCK_API ? (
-                            <a
-                              href={`${getBackendOrigin()}${file.file_url}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[var(--tf-accent)] hover:underline"
-                            >
-                              {file.name}
-                            </a>
-                          ) : (
-                            file.name
-                          )}
-                        </p>
-                        <p className="text-xs text-[var(--tf-faint)]">
-                          {file.size} · {file.uploadedBy} · {file.uploadedAt}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeAttachment(activeTask.id, file.id)
-                        }
-                        className="text-xs text-[var(--tf-danger)] hover:brightness-125"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                      attachment={file}
+                      onRemove={(attachmentId) =>
+                        removeAttachment(activeTask.id, attachmentId)
+                      }
+                    />
                   ))
                 )}
               </div>
@@ -216,6 +190,7 @@ function TaskDetailModal() {
                 <input
                   name="attachmentFile"
                   type="file"
+                  accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip"
                   className="w-full text-sm text-[var(--tf-muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--tf-accent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--tf-accent-ink)]"
                 />
                 <div className="flex gap-2">

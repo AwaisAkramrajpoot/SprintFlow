@@ -1,11 +1,4 @@
-import { useMemo, useState } from "react";
-
-function formatFileSize(bytes) {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
-}
+import { useEffect, useMemo, useState } from "react";
 
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -14,7 +7,12 @@ import { Field, Select, TextArea, TextInput } from "../components/ui/Field";
 import PageShell from "../components/PageShell";
 import SectionHeading from "../components/SectionHeading";
 import useTaskFlow, { useTaskFlowActions, useTasksQuery } from "../hooks/useTaskFlow";
+import { formatAttachmentSize } from "../lib/attachments";
 import { boardStatuses, formatDate, priorities } from "../lib/taskflow";
+
+function formatFileSize(bytes) {
+  return formatAttachmentSize(bytes);
+}
 
 function TasksPage() {
   const { projectTasks, currentProject, members } = useTaskFlow();
@@ -33,6 +31,24 @@ function TasksPage() {
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
+
+  const filePreviews = useMemo(
+    () =>
+      selectedFiles.map((file) => ({
+        file,
+        preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
+      })),
+    [selectedFiles]
+  );
+
+  useEffect(
+    () => () => {
+      filePreviews.forEach((item) => {
+        if (item.preview) URL.revokeObjectURL(item.preview);
+      });
+    },
+    [filePreviews]
+  );
 
   const filters = {
     projectId: currentProject?.id,
@@ -310,17 +326,19 @@ function TasksPage() {
                   />
                 </label>
 
-                {selectedFiles.length > 0 ? (
+                {filePreviews.length > 0 ? (
                   <ul className="space-y-2">
-                    {selectedFiles.map((file, index) => (
+                    {filePreviews.map(({ file, preview }, index) => (
                       <li
                         key={`${file.name}-${index}`}
                         className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] p-3"
                       >
-                        {file.type.startsWith("image/") ? (
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-sky-500/15 text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-200">
-                            IMG
-                          </div>
+                        {preview ? (
+                          <img
+                            src={preview}
+                            alt={file.name}
+                            className="h-12 w-12 rounded-lg border border-[var(--tf-border)] object-cover"
+                          />
                         ) : (
                           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/[0.05] text-xs text-[var(--tf-faint)]">
                             FILE
