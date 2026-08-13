@@ -1,0 +1,211 @@
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+
+import { initials } from "../lib/taskflow";
+import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
+import Badge from "./ui/Badge";
+import Button from "./ui/Button";
+import TaskDetailModal from "./TaskDetailModal";
+
+const navItems = [
+  { to: "/app/dashboard", label: "Dashboard" },
+  { to: "/app/projects", label: "Projects" },
+  { to: "/app/board", label: "Board" },
+  { to: "/app/tasks", label: "Tasks" },
+  { to: "/app/search", label: "Search" },
+  { to: "/app/notifications", label: "Notifications" },
+  { to: "/app/settings", label: "Settings", adminOnly: true },
+];
+
+const navClassName = ({ isActive }) =>
+  [
+    "tf-nav-link rounded-xl px-4 py-3 text-[0.92rem] font-medium transition duration-200",
+    isActive
+      ? "bg-[var(--tf-accent)] text-[var(--tf-accent-ink)]"
+      : "text-[var(--tf-muted)] hover:bg-white/[0.05] hover:text-white",
+  ].join(" ");
+
+function AppLayout() {
+  const navigate = useNavigate();
+  const {
+    currentUser,
+    company,
+    unreadCount,
+    notifications,
+    canManageCompany,
+  } = useTaskFlow();
+  const { signOut, markAllNotificationsRead, markNotificationRead } =
+    useTaskFlowActions();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!dropdownRef.current?.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+
+  const handleSignOut = () => {
+    signOut();
+    navigate("/login");
+  };
+
+  const visibleNav = navItems.filter(
+    (item) => !item.adminOnly || canManageCompany
+  );
+
+  return (
+    <div className="tf-app-shell">
+      <div className="mx-auto grid min-h-screen w-full max-w-[1600px] lg:grid-cols-[270px_1fr]">
+        <aside className="border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] px-5 py-6 backdrop-blur-xl lg:min-h-screen lg:border-b-0 lg:border-r">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--tf-accent)] text-sm font-extrabold tracking-tight text-[var(--tf-accent-ink)]">
+              TF
+            </div>
+            <div>
+              <p className="tf-display text-[1.05rem] font-bold text-white">
+                TaskFlow AI
+              </p>
+              <p className="text-[0.8rem] text-[var(--tf-muted)]">{company.name}</p>
+            </div>
+          </div>
+
+          <nav className="mt-9 grid gap-1.5">
+            {visibleNav.map((item) => (
+              <NavLink key={item.to} to={item.to} className={navClassName}>
+                <span className="relative z-[1] flex items-center justify-between gap-3">
+                  {item.label}
+                  {item.to === "/app/notifications" && unreadCount > 0 ? (
+                    <Badge tone="sky">{unreadCount}</Badge>
+                  ) : null}
+                </span>
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="mt-8 rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
+            <p className="tf-eyebrow">Workspace</p>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold text-white">{company.plan} Plan</p>
+                <p className="text-[0.82rem] text-[var(--tf-muted)]">
+                  {currentUser.title}
+                </p>
+              </div>
+              <Badge tone="sky">{company.role}</Badge>
+            </div>
+          </div>
+        </aside>
+
+        <div className="flex min-h-screen flex-col">
+          <header className="sticky top-0 z-30 border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.72)] backdrop-blur-xl">
+            <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="tf-eyebrow">Multi-tenant workspace</p>
+                <h1 className="tf-title mt-1.5 text-[1.35rem] md:text-[1.5rem]">
+                  {company.name}
+                </h1>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative" ref={dropdownRef}>
+                  <Button
+                    variant="secondary"
+                    className="relative"
+                    onClick={() => setShowNotifications((current) => !current)}
+                  >
+                    Notifications
+                    {unreadCount > 0 ? (
+                      <span className="tf-pulse-dot absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-[var(--tf-danger)] px-1 text-[10px] font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    ) : null}
+                  </Button>
+
+                  {showNotifications ? (
+                    <div className="tf-modal-panel absolute right-0 top-14 z-40 w-[360px] rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-surface-strong)] p-3 backdrop-blur-xl">
+                      <div className="flex items-center justify-between px-2 pb-2">
+                        <p className="text-sm font-semibold text-white">
+                          Latest updates
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            markAllNotificationsRead();
+                            setShowNotifications(false);
+                          }}
+                          className="text-xs text-[var(--tf-accent)] transition hover:brightness-125"
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                      <div className="max-h-80 space-y-2 overflow-auto">
+                        {notifications.slice(0, 5).map((notification) => (
+                          <button
+                            key={notification.id}
+                            type="button"
+                            onClick={() => {
+                              markNotificationRead(notification.id);
+                              navigate("/app/notifications");
+                              setShowNotifications(false);
+                            }}
+                            className="tf-hover-lift w-full rounded-xl border border-white/5 bg-white/[0.03] p-3 text-left"
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <p className="text-sm font-semibold text-white">
+                                {notification.title}
+                              </p>
+                              {notification.unread ? (
+                                <span className="tf-pulse-dot h-2.5 w-2.5 rounded-full bg-[var(--tf-accent)]" />
+                              ) : null}
+                            </div>
+                            <p className="mt-1 text-sm text-[var(--tf-muted)]">
+                              {notification.message}
+                            </p>
+                            <p className="mt-2 text-xs text-[var(--tf-faint)]">
+                              {notification.time}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] px-3 py-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--tf-accent)] text-sm font-bold text-[var(--tf-accent-ink)]">
+                    {initials(currentUser.name)}
+                  </div>
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-semibold text-white">
+                      {currentUser.name}
+                    </p>
+                    <p className="text-xs text-[var(--tf-muted)]">
+                      {currentUser.email}
+                    </p>
+                  </div>
+                </div>
+
+                <Button variant="ghost" onClick={handleSignOut}>
+                  Sign out
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 px-5 py-7 md:px-7">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+
+      <TaskDetailModal />
+    </div>
+  );
+}
+
+export default AppLayout;

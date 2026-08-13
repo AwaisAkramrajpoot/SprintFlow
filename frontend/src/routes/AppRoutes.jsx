@@ -1,50 +1,80 @@
-import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
+import AppLayout from "../components/AppLayout";
+import RequireAuth from "../components/RequireAuth";
+import RequireAdmin from "../components/RequireAdmin";
+import BoardPage from "../pages/BoardPage";
 import DashboardPage from "../pages/DashboardPage";
 import HomePage from "../pages/HomePage";
+import LoginPage from "../pages/LoginPage";
+import NotificationsPage from "../pages/NotificationsPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import ProjectsPage from "../pages/ProjectsPage";
+import RegisterPage from "../pages/RegisterPage";
+import SearchPage from "../pages/SearchPage";
+import SettingsPage from "../pages/SettingsPage";
+import TasksPage from "../pages/TasksPage";
 
-const navLinkClassName = ({ isActive }) =>
-  [
-    "rounded-full px-4 py-2 text-sm font-medium transition",
-    isActive
-      ? "bg-sky-400 text-slate-950"
-      : "text-slate-300 hover:bg-white/10 hover:text-white",
-  ].join(" ");
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function PublicLayout() {
+  return (
+    <div className="tf-app-shell">
+      <div className="mx-auto w-full max-w-[1600px] px-5 py-6 md:px-7">
+        <Outlet />
+      </div>
+    </div>
+  );
+}
 
 function AppRoutes() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen text-slate-100">
-        <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-300">
-              TaskFlow AI
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-white">
-              Project management platform scaffold
-            </h1>
-          </div>
-
-          <nav className="flex flex-wrap items-center gap-2">
-            <NavLink to="/" className={navLinkClassName}>
-              Home
-            </NavLink>
-            <NavLink to="/dashboard" className={navLinkClassName}>
-              Dashboard
-            </NavLink>
-          </nav>
-        </header>
-
-        <main className="mx-auto w-full max-w-6xl px-6 pb-12">
-          <Routes>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
+          <Route
+            path="/app"
+            element={
+              <RequireAuth>
+                <AppLayout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="board" element={<BoardPage />} />
+            <Route path="tasks" element={<TasksPage />} />
+            <Route path="search" element={<SearchPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route
+              path="settings"
+              element={
+                <RequireAdmin>
+                  <SettingsPage />
+                </RequireAdmin>
+              }
+            />
+          </Route>
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
