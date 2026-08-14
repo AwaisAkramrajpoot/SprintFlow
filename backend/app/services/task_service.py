@@ -65,6 +65,8 @@ def list_tasks(
     priority: str | None = None,
     assignee_id: str | None = None,
     q: str | None = None,
+    due_from=None,
+    due_to=None,
     limit: int = 50,
     offset: int = 0,
 ):
@@ -95,6 +97,10 @@ def list_tasks(
     if q:
         like = f"%{q}%"
         query = query.filter(or_(Task.title.ilike(like), Task.description.ilike(like)))
+    if due_from:
+        query = query.filter(Task.due_date >= due_from)
+    if due_to:
+        query = query.filter(Task.due_date <= due_to)
 
     count_query = db.query(func.count(Task.id)).filter(Task.company_id == company_id)
     if board_id:
@@ -114,6 +120,10 @@ def list_tasks(
         count_query = count_query.filter(
             or_(Task.title.ilike(like), Task.description.ilike(like))
         )
+    if due_from:
+        count_query = count_query.filter(Task.due_date >= due_from)
+    if due_to:
+        count_query = count_query.filter(Task.due_date <= due_to)
 
     total = count_query.scalar() or 0
     items = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()

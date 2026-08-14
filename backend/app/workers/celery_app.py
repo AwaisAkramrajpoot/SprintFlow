@@ -29,5 +29,9 @@ celery_app.conf.update(
             "task": "app.workers.tasks.check_overdue_tasks",
             "schedule": crontab(minute=0),
         },
+        "daily-ai-report": {
+            "task": "app.workers.tasks.generate_daily_ai_reports",
+            "schedule": crontab(hour=7, minute=30),
+        },
     },
 )

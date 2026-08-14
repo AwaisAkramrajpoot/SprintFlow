@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -35,6 +37,8 @@ def list_tasks(
     priority: str | None = Query(default=None),
     assignee_id: str | None = Query(default=None),
     q: str | None = Query(default=None),
+    due_from: date | None = Query(default=None),
+    due_to: date | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     ctx: AuthContext = Depends(ANY_MEMBER),
@@ -49,6 +53,8 @@ def list_tasks(
         priority=priority,
         assignee_id=assignee_id,
         q=q,
+        due_from=due_from,
+        due_to=due_to,
         limit=limit,
         offset=offset,
     )

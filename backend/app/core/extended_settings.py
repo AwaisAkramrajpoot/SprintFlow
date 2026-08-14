@@ -59,6 +59,15 @@ class ExtendedSettings:
         default_factory=lambda: os.getenv("SMTP_USE_SSL", "false").lower()
         in {"1", "true", "yes"}
     )
+    openai_api_key: str = field(
+        default_factory=lambda: os.getenv("OPENAI_API_KEY", "")
+    )
+    openai_model: str = field(
+        default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    )
+    openai_whisper_model: str = field(
+        default_factory=lambda: os.getenv("OPENAI_WHISPER_MODEL", "whisper-1")
+    )
 
 
 extended_settings = ExtendedSettings()

@@ -20,3 +20,7 @@ def unauthorized(detail: str = "Not authenticated") -> AppException:
 
 def bad_request(detail: str) -> AppException:
     return AppException(status.HTTP_400_BAD_REQUEST, detail)
+
+
+def service_unavailable(detail: str = "Service unavailable") -> AppException:
+    return AppException(status.HTTP_503_SERVICE_UNAVAILABLE, detail)

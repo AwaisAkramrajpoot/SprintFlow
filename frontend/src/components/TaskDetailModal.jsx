@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { USE_MOCK_API } from "../api/client";
+import { taskflowApi } from "../api/taskflowApi";
 import AttachmentItem from "./AttachmentItem";
 import useTaskFlow, { useTaskFlowActions } from "../hooks/useTaskFlow";
 import {
@@ -31,6 +33,8 @@ function TaskDetailModal() {
   const [comment, setComment] = useState("");
   const [checklistText, setChecklistText] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
+  const [commentSummary, setCommentSummary] = useState(null);
+  const [summarizing, setSummarizing] = useState(false);
 
   if (!activeTask) {
     return null;
@@ -121,7 +125,34 @@ function TaskDetailModal() {
             </div>
 
             <div className="rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
-              <p className="text-sm font-semibold text-white">Comments</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-white">Comments</p>
+                <Button
+                  variant="secondary"
+                  className="!px-3 !py-1.5 !text-xs"
+                  disabled={summarizing || comments.length === 0}
+                  onClick={async () => {
+                    if (USE_MOCK_API) return;
+                    setSummarizing(true);
+                    try {
+                      setCommentSummary(
+                        await taskflowApi.summarizeComments(activeTask.id)
+                      );
+                    } finally {
+                      setSummarizing(false);
+                    }
+                  }}
+                >
+                  {summarizing ? "Summarizing…" : "AI summarize"}
+                </Button>
+              </div>
+              {commentSummary ? (
+                <div className="mt-3 rounded-xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] p-3 text-sm text-[var(--tf-muted)]">
+                  <p><strong className="text-white">Issue:</strong> {commentSummary.main_issue}</p>
+                  <p className="mt-1"><strong className="text-white">Solution:</strong> {commentSummary.proposed_solution}</p>
+                  <p className="mt-1"><strong className="text-white">Status:</strong> {commentSummary.current_status}</p>
+                </div>
+              ) : null}
               <div className="mt-4 space-y-3">
                 {comments.length === 0 ? (
                   <p className="text-sm text-[var(--tf-muted)]">No comments yet.</p>

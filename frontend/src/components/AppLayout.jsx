@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { initials } from "../lib/taskflow";
 import useTaskFlow, { hydrateWorkspace, useTaskFlowActions } from "../hooks/useTaskFlow";
 import { USE_MOCK_API } from "../api/client";
+import AiChatSidebar from "./AiChatSidebar";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
 import TaskDetailModal from "./TaskDetailModal";
@@ -14,6 +15,7 @@ const navItems = [
   { to: "/app/board", label: "Board" },
   { to: "/app/tasks", label: "Tasks" },
   { to: "/app/search", label: "Search" },
+  { to: "/app/ai", label: "AI" },
   { to: "/app/notifications", label: "Notifications" },
   { to: "/app/settings", label: "Settings", adminOnly: true },
 ];
@@ -245,6 +247,7 @@ function AppLayout() {
       </div>
 
       <TaskDetailModal />
+      <AiChatSidebar />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import AppLayout from "../components/AppLayout";
 import RequireAuth from "../components/RequireAuth";
 import RequireAdmin from "../components/RequireAdmin";
+import AiPage from "../pages/AiPage";
 import BoardPage from "../pages/BoardPage";
 import DashboardPage from "../pages/DashboardPage";
 import HomePage from "../pages/HomePage";
@@ -70,6 +71,7 @@ function AppRoutes() {
             <Route path="board" element={<BoardPage />} />
             <Route path="tasks" element={<TasksPage />} />
             <Route path="search" element={<SearchPage />} />
+            <Route path="ai" element={<AiPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route
               path="settings"

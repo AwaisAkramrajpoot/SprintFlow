@@ -142,3 +142,43 @@ def check_overdue_tasks() -> dict:
         raise
     finally:
         db.close()
+
+
+@celery_app.task(name="app.workers.tasks.process_meeting_summary", bind=True, max_retries=2)
+def process_meeting_summary(
+    self,
+    path: str,
+    company_id: str,
+    user_id: str,
+    project_id: str | None,
+    create_tasks: bool,
+) -> dict:
+    db = _session()
+    try:
+        from app.models.entities import User
+        from app.services.ai import ai_service
+
+        actor = db.get(User, user_id)
+        if actor is None:
+            raise ValueError("User not found")
+        transcript = ai_service.transcribe_audio(path)
+        return ai_service.meeting_summary_from_transcript(
+            db,
+            company_id,
+            actor,
+            transcript,
+            project_id,
+            create_tasks,
+        )
+    except Exception as exc:
+        logger.exception("Meeting summary failed")
+        raise self.retry(exc=exc, countdown=20)
+    finally:
+        db.close()
+
+
+@celery_app.task(name="app.workers.tasks.generate_daily_ai_reports")
+def generate_daily_ai_reports() -> dict:
+    from app.services.ai import ai_service
+
+    return ai_service.generate_daily_reports_for_all_companies()
