@@ -15,10 +15,18 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.enums import CompanyPlan, MemberRole, TaskPriority
+from app.core.enums import CompanyPlan, KnowledgeDocStatus, MemberRole, TaskPriority
 from app.db.base import Base
+
+try:
+    from pgvector.sqlalchemy import Vector
+except ImportError:  # pragma: no cover - local sqlite fallback
+    Vector = None
+
+EMBEDDING_DIMENSIONS = 384
 
 
 def uuid_str() -> str:
@@ -39,6 +47,9 @@ class Company(Base):
     users: Mapped[list[User]] = relationship(back_populates="company")
     projects: Mapped[list[Project]] = relationship(back_populates="company")
     invites: Mapped[list[CompanyInvite]] = relationship(back_populates="company")
+    knowledge_documents: Mapped[list["KnowledgeDocument"]] = relationship(
+        back_populates="company"
+    )
 
 
 class User(Base):
@@ -277,3 +288,69 @@ class Notification(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="notifications")
+
+
+class KnowledgeDocument(Base):
+    __tablename__ = "knowledge_documents"
+    __table_args__ = (Index("ix_knowledge_documents_company_id", "company_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_str)
+    company_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    stored_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    content_type: Mapped[str | None] = mapped_column(String(128))
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(
+        String(32), default=KnowledgeDocStatus.PENDING.value, nullable=False
+    )
+    error_message: Mapped[str | None] = mapped_column(Text)
+    chunk_count: Mapped[int] = mapped_column(Integer, default=0)
+    uploaded_by: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    company: Mapped[Company] = relationship(back_populates="knowledge_documents")
+    uploader: Mapped[User | None] = relationship()
+    chunks: Mapped[list["DocumentChunk"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan"
+    )
+
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+    __table_args__ = (
+        Index("ix_document_chunks_company_id", "company_id"),
+        Index("ix_document_chunks_document_id", "document_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uuid_str)
+    document_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("knowledge_documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    company_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False
+    )
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(
+        Vector(EMBEDDING_DIMENSIONS) if Vector is not None else Text,
+        nullable=False,
+    )
+    chunk_metadata: Mapped[dict] = mapped_column(
+        "metadata", JSONB, nullable=False, default=dict
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    document: Mapped[KnowledgeDocument] = relationship(back_populates="chunks")

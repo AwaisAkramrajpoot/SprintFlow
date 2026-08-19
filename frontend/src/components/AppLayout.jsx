@@ -16,6 +16,7 @@ const navItems = [
   { to: "/app/tasks", label: "Tasks" },
   { to: "/app/search", label: "Search" },
   { to: "/app/ai", label: "AI" },
+  { to: "/app/knowledge", label: "Knowledge" },
   { to: "/app/notifications", label: "Notifications" },
   { to: "/app/settings", label: "Settings", adminOnly: true },
 ];

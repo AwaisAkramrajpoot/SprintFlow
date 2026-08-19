@@ -20,3 +20,10 @@ class CompanyPlan(str, enum.Enum):
     PRO = "Pro"
     BUSINESS = "Business"
     ENTERPRISE = "Enterprise"
+
+
+class KnowledgeDocStatus(str, enum.Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    READY = "ready"
+    FAILED = "failed"

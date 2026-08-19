@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { USE_MOCK_API } from "../api/client";
 import { taskflowApi } from "../api/taskflowApi";
@@ -91,7 +92,15 @@ function AiPage() {
       <SectionHeading
         eyebrow="Phase 2"
         title="TaskFlow AI workspace"
-        description="Generate tasks, estimate work, plan sprints, transcribe meetings, review code, and predict delivery risk. RAG is not included yet."
+        description="Generate tasks, estimate work, plan sprints, transcribe meetings, review code, and predict delivery risk. Use Knowledge for RAG Q&A over uploaded PDFs."
+        actions={
+          <Link
+            to="/app/knowledge"
+            className="rounded-xl border border-[var(--tf-border)] px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            Open knowledge base
+          </Link>
+        }
       />
 
       <Card className="p-4">

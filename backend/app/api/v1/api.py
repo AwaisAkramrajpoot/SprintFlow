@@ -7,6 +7,7 @@ from app.api.v1 import (
     boards,
     comments,
     companies,
+    knowledge_base,
     notifications,
     projects,
     search,
@@ -28,3 +29,4 @@ api_router.include_router(attachments.router)
 api_router.include_router(notifications.router)
 api_router.include_router(search.router)
 api_router.include_router(ai.router)
+api_router.include_router(knowledge_base.router)

@@ -182,3 +182,17 @@ def generate_daily_ai_reports() -> dict:
     from app.services.ai import ai_service
 
     return ai_service.generate_daily_reports_for_all_companies()
+
+
+@celery_app.task(name="app.workers.tasks.ingest_knowledge_document", bind=True, max_retries=2)
+def ingest_knowledge_document(self, document_id: str) -> dict:
+    from app.core.exceptions import AppException
+    from app.services.ai import rag_service
+
+    try:
+        return rag_service.run_ingest_job(document_id)
+    except Exception as exc:
+        logger.exception("Knowledge ingest failed for %s", document_id)
+        if isinstance(exc, AppException) and exc.status_code < 500:
+            raise
+        raise self.retry(exc=exc, countdown=20)

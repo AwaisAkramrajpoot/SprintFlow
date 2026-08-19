@@ -15,6 +15,7 @@ import AiPage from "../pages/AiPage";
 import BoardPage from "../pages/BoardPage";
 import DashboardPage from "../pages/DashboardPage";
 import HomePage from "../pages/HomePage";
+import KnowledgeBasePage from "../pages/KnowledgeBasePage";
 import LoginPage from "../pages/LoginPage";
 import NotificationsPage from "../pages/NotificationsPage";
 import NotFoundPage from "../pages/NotFoundPage";
@@ -72,6 +73,7 @@ function AppRoutes() {
             <Route path="tasks" element={<TasksPage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="ai" element={<AiPage />} />
+            <Route path="knowledge" element={<KnowledgeBasePage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route
               path="settings"

@@ -10,10 +10,13 @@ import { TextInput } from "./ui/Field";
 function AiChatSidebar() {
   const { currentProject } = useTaskFlow();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState("workspace");
   const [message, setMessage] = useState("");
   const [history, setHistory] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const isKnowledge = mode === "knowledge";
 
   const send = async (event) => {
     event.preventDefault();
@@ -30,15 +33,27 @@ function AiChatSidebar() {
     setBusy(true);
     setError("");
     try {
-      const data = await taskflowApi.aiChat({
-        message: text,
-        history: nextHistory.slice(-8),
-        project_id: currentProject?.id,
-      });
-      setHistory([
-        ...nextHistory,
-        { role: "assistant", content: data.answer, tools: data.tools_used },
-      ]);
+      if (isKnowledge) {
+        const data = await taskflowApi.askKnowledgeBase({ question: text });
+        setHistory([
+          ...nextHistory,
+          {
+            role: "assistant",
+            content: data.answer,
+            sources: data.sources || [],
+          },
+        ]);
+      } else {
+        const data = await taskflowApi.aiChat({
+          message: text,
+          history: nextHistory.slice(-8),
+          project_id: currentProject?.id,
+        });
+        setHistory([
+          ...nextHistory,
+          { role: "assistant", content: data.answer, tools: data.tools_used },
+        ]);
+      }
     } catch (err) {
       setError(err.message || "Chat failed");
     } finally {
@@ -57,15 +72,43 @@ function AiChatSidebar() {
       </button>
 
       {open ? (
-        <Card className="fixed bottom-24 right-6 z-40 flex h-[480px] w-[min(420px,calc(100vw-2rem))] flex-col p-4">
+        <Card className="fixed bottom-24 right-6 z-40 flex h-[520px] w-[min(420px,calc(100vw-2rem))] flex-col p-4">
           <p className="tf-eyebrow">AI assistant</p>
-          <p className="mt-1 text-sm text-[var(--tf-muted)]">
-            Ask about delayed tasks, your work, or project status.
+          <div className="mt-2 flex gap-2">
+            {[
+              { id: "workspace", label: "Workspace" },
+              { id: "knowledge", label: "Knowledge" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setMode(item.id);
+                  setHistory([]);
+                  setError("");
+                }}
+                className={[
+                  "rounded-lg px-3 py-1 text-xs font-semibold",
+                  mode === item.id
+                    ? "bg-[var(--tf-accent)] text-[var(--tf-accent-ink)]"
+                    : "border border-[var(--tf-border)] text-[var(--tf-muted)]",
+                ].join(" ")}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-sm text-[var(--tf-muted)]">
+            {isKnowledge
+              ? "Ask questions grounded in uploaded company documents."
+              : "Ask about delayed tasks, your work, or project status."}
           </p>
           <div className="mt-3 min-h-0 flex-1 space-y-3 overflow-auto">
             {history.length === 0 ? (
               <p className="text-sm text-[var(--tf-faint)]">
-                Try: “What is delayed?” or “What are my tasks?”
+                {isKnowledge
+                  ? "Try: “How does our leave policy work?”"
+                  : "Try: “What is delayed?” or “What are my tasks?”"}
               </p>
             ) : (
               history.map((item, index) => (
@@ -78,7 +121,17 @@ function AiChatSidebar() {
                       : "mr-8 bg-white/[0.04] text-[var(--tf-muted)]",
                   ].join(" ")}
                 >
-                  {item.content}
+                  <p className="whitespace-pre-wrap">{item.content}</p>
+                  {item.sources?.length ? (
+                    <div className="mt-2 space-y-1 text-[11px] text-[var(--tf-faint)]">
+                      {item.sources.slice(0, 3).map((source) => (
+                        <p key={source.chunk_id}>
+                          Source: {source.filename}
+                          {source.page ? ` p.${source.page}` : ""}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ))
             )}
@@ -88,7 +141,13 @@ function AiChatSidebar() {
             <TextInput
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder={busy ? "Thinking…" : "Ask TaskFlow AI"}
+              placeholder={
+                busy
+                  ? "Thinking…"
+                  : isKnowledge
+                    ? "Ask the knowledge base"
+                    : "Ask TaskFlow AI"
+              }
               disabled={busy}
             />
             <Button type="submit" variant="primary" disabled={busy}>

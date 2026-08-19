@@ -5,6 +5,8 @@ from app.models.entities import (  # noqa: F401
     Company,
     CompanyInvite,
     CompanyMember,
+    DocumentChunk,
+    KnowledgeDocument,
     Notification,
     Project,
     RefreshToken,

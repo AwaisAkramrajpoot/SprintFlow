@@ -72,14 +72,43 @@ def invoke_json(system_prompt: str, user_prompt: str, *, temperature: float = 0.
         )
         return _parse_json(getattr(result, "content", "") or "")
     except Exception as exc:
-        if hasattr(exc, "status_code") and getattr(exc, "status_code") in {400, 401, 403, 429}:
-            raise service_unavailable(str(exc)) from exc
         logger.exception("LLM JSON invoke failed")
-        from app.core.exceptions import AppException
+        _reraise_ai_error(exc, "AI request failed")
 
-        if isinstance(exc, AppException):
-            raise
-        raise service_unavailable(f"AI request failed: {exc}") from exc
+
+def _is_quota_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return any(
+        token in message
+        for token in (
+            "insufficient_quota",
+            "credit_balance_exhausted",
+            "no credits remaining",
+            "exceeded your current quota",
+        )
+    )
+
+
+def _reraise_ai_error(exc: Exception, prefix: str) -> None:
+    from app.core.exceptions import AppException
+
+    if isinstance(exc, AppException):
+        raise exc
+
+    status = getattr(exc, "status_code", None) or getattr(exc, "status", None)
+    message = str(exc).lower()
+    if _is_quota_error(exc):
+        raise service_unavailable(
+            "OpenAI credits are exhausted. Knowledge Base uses local embeddings "
+            "and will still answer from your documents."
+        ) from exc
+    if status == 429 or "rate limit" in message:
+        raise service_unavailable("AI rate limit reached. Try again in a moment.") from exc
+    if status in {408, 504} or "timeout" in message or "timed out" in message:
+        raise service_unavailable("AI request timed out. Try a shorter question.") from exc
+    if status in {401, 403}:
+        raise service_unavailable("AI provider rejected the API key.") from exc
+    raise service_unavailable(f"{prefix}: {exc}") from exc
 
 
 def invoke_text(system_prompt: str, user_prompt: str, *, temperature: float = 0.3) -> str:
@@ -93,8 +122,77 @@ def invoke_text(system_prompt: str, user_prompt: str, *, temperature: float = 0.
         return (getattr(result, "content", "") or "").strip()
     except Exception as exc:
         logger.exception("LLM text invoke failed")
-        from app.core.exceptions import AppException
+        _reraise_ai_error(exc, "AI request failed")
 
-        if isinstance(exc, AppException):
-            raise
-        raise service_unavailable(f"AI request failed: {exc}") from exc
+
+def get_embeddings():
+    require_openai_key()
+    try:
+        from langchain_openai import OpenAIEmbeddings
+    except ImportError as exc:
+        raise service_unavailable(
+            "LangChain OpenAI is not installed. Run: pip install langchain-openai"
+        ) from exc
+
+    return OpenAIEmbeddings(
+        model=extended_settings.openai_embedding_model,
+        openai_api_key=extended_settings.openai_api_key,
+        dimensions=384,
+        request_timeout=90,
+        max_retries=0,
+        chunk_size=100,
+    )
+
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+", re.IGNORECASE)
+_LOCAL_EMBED_DIM = 384
+
+
+def _hash_embed_one(text: str) -> list[float]:
+    import hashlib
+    import math
+
+    vec = [0.0] * _LOCAL_EMBED_DIM
+    tokens = _TOKEN_RE.findall((text or "").lower())
+    grams = tokens + [f"{a}_{b}" for a, b in zip(tokens, tokens[1:])]
+    for token in grams:
+        digest = hashlib.md5(token.encode("utf-8")).digest()
+        index = int.from_bytes(digest[:4], "little") % _LOCAL_EMBED_DIM
+        sign = 1.0 if digest[4] % 2 == 0 else -1.0
+        vec[index] += sign
+    norm = math.sqrt(sum(value * value for value in vec)) or 1.0
+    return [value / norm for value in vec]
+
+
+def _local_embed_texts(texts: list[str]) -> list[list[float]]:
+    try:
+        from fastembed import TextEmbedding
+    except ImportError:
+        logger.info("fastembed not installed; using local hashed embeddings")
+        return [_hash_embed_one(text) for text in texts]
+
+    model = getattr(_local_embed_texts, "_model", None)
+    if model is None:
+        model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        _local_embed_texts._model = model  # type: ignore[attr-defined]
+    vectors = []
+    for item in model.embed(texts):
+        vectors.append([float(value) for value in item])
+    return vectors
+
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    if not texts:
+        return []
+    if extended_settings.embedding_provider != "openai":
+        return _local_embed_texts(texts)
+    try:
+        return get_embeddings().embed_documents(texts)
+    except Exception as exc:
+        logger.warning("OpenAI embeddings failed (%s); using local embeddings", exc)
+        return _local_embed_texts(texts)
+
+
+def embed_query(text: str) -> list[float]:
+    vectors = embed_texts([text])
+    return vectors[0] if vectors else _hash_embed_one(text)

@@ -77,6 +77,28 @@ def enqueue_meeting_summary(
         return job_id
 
 
+def enqueue_knowledge_ingest(*, document_id: str) -> str:
+    try:
+        from app.workers.tasks import ingest_knowledge_document
+
+        result = ingest_knowledge_document.delay(document_id)
+        logger.info("Queued knowledge ingest job %s for %s", result.id, document_id)
+        return result.id
+    except Exception as exc:
+        logger.warning("Celery unavailable, ingesting document inline: %s", exc)
+        from app.db.session import SessionLocal
+        from app.services.ai import rag_service
+
+        db = SessionLocal()
+        try:
+            payload = rag_service.ingest_document(db, document_id)
+        finally:
+            db.close()
+        job_id = f"inline-kb-{document_id[:8]}"
+        _INLINE_JOBS[job_id] = {"status": "success", "result": payload, "error": None}
+        return job_id
+
+
 def get_job_status(job_id: str) -> dict:
     if job_id in _INLINE_JOBS:
         return _INLINE_JOBS[job_id]

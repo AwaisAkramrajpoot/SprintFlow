@@ -68,6 +68,27 @@ class ExtendedSettings:
     openai_whisper_model: str = field(
         default_factory=lambda: os.getenv("OPENAI_WHISPER_MODEL", "whisper-1")
     )
+    openai_embedding_model: str = field(
+        default_factory=lambda: os.getenv(
+            "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
+        )
+    )
+    embedding_provider: str = field(
+        default_factory=lambda: os.getenv("EMBEDDING_PROVIDER", "local").strip().lower()
+    )
+    rag_use_llm: bool = field(
+        default_factory=lambda: os.getenv("RAG_USE_LLM", "false").lower()
+        in {"1", "true", "yes"}
+    )
+    rag_chunk_size: int = field(
+        default_factory=lambda: int(os.getenv("RAG_CHUNK_SIZE", "2000"))
+    )
+    rag_chunk_overlap: int = field(
+        default_factory=lambda: int(os.getenv("RAG_CHUNK_OVERLAP", "200"))
+    )
+    rag_top_k: int = field(
+        default_factory=lambda: int(os.getenv("RAG_TOP_K", "5"))
+    )
 
 
 extended_settings = ExtendedSettings()

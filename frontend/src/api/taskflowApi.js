@@ -253,4 +253,35 @@ export const taskflowApi = {
       body: JSON.stringify(payload),
     });
   },
+
+  uploadKnowledgeDocument(file) {
+    const body = new FormData();
+    body.append("file", file);
+    return apiRequest("/knowledge-base/upload", { method: "POST", body });
+  },
+
+  listKnowledgeDocuments() {
+    return apiRequest("/knowledge-base/documents");
+  },
+
+  getKnowledgeDocument(documentId) {
+    return apiRequest(`/knowledge-base/documents/${documentId}`);
+  },
+
+  deleteKnowledgeDocument(documentId) {
+    return apiRequest(`/knowledge-base/documents/${documentId}`, { method: "DELETE" });
+  },
+
+  reprocessKnowledgeDocument(documentId) {
+    return apiRequest(`/knowledge-base/documents/${documentId}/reprocess`, {
+      method: "POST",
+    });
+  },
+
+  askKnowledgeBase(payload) {
+    return apiRequest("/knowledge-base/ask", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
 };
