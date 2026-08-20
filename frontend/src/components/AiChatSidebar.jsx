@@ -100,15 +100,15 @@ function AiChatSidebar() {
           </div>
           <p className="mt-2 text-sm text-[var(--tf-muted)]">
             {isKnowledge
-              ? "Ask questions grounded in uploaded company documents."
-              : "Ask about delayed tasks, your work, or project status."}
+              ? "Get answers from your uploaded company documents."
+              : "Ask about delayed work, your assignments, or project status."}
           </p>
           <div className="mt-3 min-h-0 flex-1 space-y-3 overflow-auto">
             {history.length === 0 ? (
-              <p className="text-sm text-[var(--tf-faint)]">
+              <p className="text-sm text-[var(--tf-muted)]">
                 {isKnowledge
-                  ? "Try: “How does our leave policy work?”"
-                  : "Try: “What is delayed?” or “What are my tasks?”"}
+                  ? "Example: “What is our remote work policy?”"
+                  : "Example: “What is overdue?” or “Show my open tasks.”"}
               </p>
             ) : (
               history.map((item, index) => (
@@ -117,13 +117,13 @@ function AiChatSidebar() {
                   className={[
                     "rounded-xl px-3 py-2 text-sm",
                     item.role === "user"
-                      ? "ml-8 bg-[var(--tf-accent-soft)] text-white"
-                      : "mr-8 bg-white/[0.04] text-[var(--tf-muted)]",
+                      ? "ml-8 bg-[var(--tf-accent-soft)] text-[var(--tf-ink)]"
+                      : "mr-8 bg-[var(--tf-bg-1)] text-[var(--tf-muted)]",
                   ].join(" ")}
                 >
                   <p className="whitespace-pre-wrap">{item.content}</p>
                   {item.sources?.length ? (
-                    <div className="mt-2 space-y-1 text-[11px] text-[var(--tf-faint)]">
+                    <div className="mt-2 space-y-1 text-[11px] text-[var(--tf-muted)]">
                       {item.sources.slice(0, 3).map((source) => (
                         <p key={source.chunk_id}>
                           Source: {source.filename}

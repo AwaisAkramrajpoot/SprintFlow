@@ -1,6 +1,6 @@
 function Modal({ title, children, onClose }) {
   return (
-    <div className="tf-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[#041018]/72 p-4 backdrop-blur-md">
+    <div className="tf-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[rgba(12,22,18,0.45)] p-4 backdrop-blur-md">
       <div className="tf-modal-panel tf-surface-strong flex max-h-[90vh] w-full max-w-5xl flex-col p-6 md:p-7">
         <div className="flex items-center justify-between gap-4 border-b border-[var(--tf-border)] pb-4">
           <div>
@@ -10,7 +10,7 @@ function Modal({ title, children, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-[var(--tf-border)] px-3.5 py-2 text-sm text-[var(--tf-muted)] transition hover:border-[var(--tf-border-strong)] hover:text-white"
+            className="rounded-xl border border-[var(--tf-border)] px-3.5 py-2 text-sm text-[var(--tf-muted)] transition hover:border-[var(--tf-border-strong)] hover:text-[var(--tf-ink)]"
           >
             Close
           </button>

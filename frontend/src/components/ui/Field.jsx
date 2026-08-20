@@ -1,11 +1,11 @@
 const fieldClass =
-  "w-full rounded-xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] px-4 py-3 text-[0.95rem] text-white outline-none transition duration-200 placeholder:text-[var(--tf-faint)] focus:border-[var(--tf-border-strong)] focus:bg-[rgba(6,16,24,0.75)]";
+  "w-full rounded-xl border border-[var(--tf-border)] bg-white px-4 py-3 text-[0.95rem] font-medium text-[var(--tf-ink)] outline-none transition duration-200 placeholder:text-[#6b7d73] focus:border-[var(--tf-border-strong)] focus:bg-white focus:shadow-[0_0_0_4px_rgba(12,125,92,0.12)]";
 
 export function Field({ label, children }) {
   return (
     <label className="block">
       {label ? (
-        <span className="mb-2 block text-[0.8rem] font-medium tracking-[0.02em] text-[var(--tf-muted)]">
+        <span className="mb-2 block text-[0.82rem] font-bold tracking-[0.02em] text-[var(--tf-muted)]">
           {label}
         </span>
       ) : null}

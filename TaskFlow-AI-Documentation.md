@@ -436,3 +436,7 @@ Return answer + source document references
 8. Folder structure
 9. Roadmap / future improvements
 10. License
+
+
+.\.venv\Scripts\activate
+uvicorn app.main:app --reload

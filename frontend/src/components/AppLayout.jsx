@@ -50,7 +50,6 @@ function AppLayout() {
 
   useEffect(() => {
     closeTask();
-    // Only react to route changes — not action identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -66,7 +65,6 @@ function AppLayout() {
     return () => {
       cancelled = true;
     };
-    // Bootstrap once when the authenticated shell mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -82,13 +80,11 @@ function AppLayout() {
   return (
     <div key={location.pathname} className="tf-app-shell">
       <div className="mx-auto grid min-h-screen w-full max-w-[1600px] lg:grid-cols-[270px_minmax(0,1fr)]">
-        <aside className="relative z-30 border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.92)] px-5 py-6 backdrop-blur-xl lg:sticky lg:top-0 lg:min-h-screen lg:self-start lg:border-b-0 lg:border-r">
+        <aside className="relative z-30 border-b border-[var(--tf-border)] bg-white/90 px-5 py-6 backdrop-blur-xl lg:sticky lg:top-0 lg:min-h-screen lg:self-start lg:border-b-0 lg:border-r">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--tf-accent)] text-sm font-extrabold tracking-tight text-[var(--tf-accent-ink)]">
-              TF
-            </div>
+            <div className="tf-brand-mark h-11 w-11 text-sm">TF</div>
             <div>
-              <p className="tf-display text-[1.05rem] font-bold text-white">
+              <p className="tf-display text-[1.05rem] font-bold text-[var(--tf-ink)]">
                 TaskFlow AI
               </p>
               <p className="text-[0.8rem] text-[var(--tf-muted)]">{company?.name}</p>
@@ -108,10 +104,10 @@ function AppLayout() {
                     closeTask();
                   }}
                   className={[
-                    "tf-nav-link relative z-10 flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-[0.92rem] font-medium transition duration-200",
+                    "tf-nav-link relative z-10 flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-[0.92rem] font-semibold transition duration-200",
                     isActive
-                      ? "bg-[var(--tf-accent)] text-[var(--tf-accent-ink)]"
-                      : "text-[var(--tf-muted)] hover:bg-white/[0.05] hover:text-white",
+                      ? "bg-[var(--tf-accent)] text-white shadow-[0_10px_22px_rgba(15,143,106,0.22)]"
+                      : "text-[var(--tf-muted)] hover:bg-[var(--tf-accent-soft)] hover:text-[var(--tf-ink)]",
                   ].join(" ")}
                 >
                   <span className="relative z-[1]">{item.label}</span>
@@ -123,11 +119,11 @@ function AppLayout() {
             })}
           </nav>
 
-          <div className="mt-8 rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
+          <div className="mt-8 rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4">
             <p className="tf-eyebrow">Workspace</p>
             <div className="mt-3 flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-white">{company?.plan} Plan</p>
+                <p className="font-semibold text-[var(--tf-ink)]">{company?.plan} Plan</p>
                 <p className="text-[0.82rem] text-[var(--tf-muted)]">
                   {currentUser?.title}
                 </p>
@@ -138,10 +134,10 @@ function AppLayout() {
         </aside>
 
         <div className="relative z-0 flex min-h-screen min-w-0 flex-col overflow-x-hidden">
-          <header className="sticky top-0 z-20 border-b border-[var(--tf-border)] bg-[rgba(6,16,24,0.72)] backdrop-blur-xl">
+          <header className="sticky top-0 z-20 border-b border-[var(--tf-border)] bg-white/80 backdrop-blur-xl">
             <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="tf-eyebrow">Multi-tenant workspace</p>
+                <p className="tf-eyebrow">Your workspace</p>
                 <h1 className="tf-title mt-1.5 text-[1.35rem] md:text-[1.5rem]">
                   {company?.name}
                 </h1>
@@ -163,9 +159,9 @@ function AppLayout() {
                   </Button>
 
                   {showNotifications ? (
-                    <div className="tf-modal-panel absolute right-0 top-14 z-40 w-[360px] rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-surface-strong)] p-3 backdrop-blur-xl">
+                    <div className="tf-modal-panel absolute right-0 top-14 z-40 w-[360px] rounded-2xl border border-[var(--tf-border)] bg-white p-3 shadow-[var(--tf-shadow)]">
                       <div className="flex items-center justify-between px-2 pb-2">
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[var(--tf-ink)]">
                           Latest updates
                         </p>
                         <button
@@ -174,7 +170,7 @@ function AppLayout() {
                             markAllNotificationsRead();
                             setShowNotifications(false);
                           }}
-                          className="text-xs text-[var(--tf-accent)] transition hover:brightness-125"
+                          className="text-xs font-semibold text-[var(--tf-accent)] transition hover:brightness-110"
                         >
                           Mark all read
                         </button>
@@ -189,10 +185,10 @@ function AppLayout() {
                               setShowNotifications(false);
                               navigate("/app/notifications");
                             }}
-                            className="tf-hover-lift w-full rounded-xl border border-white/5 bg-white/[0.03] p-3 text-left"
+                            className="tf-hover-lift w-full rounded-xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-3 text-left"
                           >
                             <div className="flex items-center justify-between gap-4">
-                              <p className="text-sm font-semibold text-white">
+                              <p className="text-sm font-semibold text-[var(--tf-ink)]">
                                 {notification.title}
                               </p>
                               {notification.unread ? (
@@ -202,7 +198,7 @@ function AppLayout() {
                             <p className="mt-1 text-sm text-[var(--tf-muted)]">
                               {notification.message}
                             </p>
-                            <p className="mt-2 text-xs text-[var(--tf-faint)]">
+                            <p className="mt-2 text-xs text-[var(--tf-muted)]">
                               {notification.time}
                             </p>
                           </button>
@@ -212,12 +208,12 @@ function AppLayout() {
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] px-3 py-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--tf-accent)] text-sm font-bold text-[var(--tf-accent-ink)]">
+                <div className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white px-3 py-2">
+                  <div className="tf-brand-mark h-10 w-10 text-sm">
                     {initials(currentUser?.name)}
                   </div>
                   <div className="hidden sm:block">
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-[var(--tf-ink)]">
                       {currentUser?.name}
                     </p>
                     <p className="text-xs text-[var(--tf-muted)]">
@@ -235,12 +231,12 @@ function AppLayout() {
 
           <main className="relative z-0 min-w-0 flex-1 px-5 py-7 md:px-7">
             {apiError ? (
-              <div className="mb-4 rounded-xl border border-[color-mix(in_srgb,var(--tf-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--tf-danger)_12%,transparent)] px-4 py-3 text-sm text-[var(--tf-danger)]">
+              <div className="mb-4 rounded-xl border border-[color-mix(in_srgb,var(--tf-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--tf-danger)_10%,white)] px-4 py-3 text-sm text-[var(--tf-danger)]">
                 {apiError}
               </div>
             ) : null}
             {apiLoading ? (
-              <p className="mb-4 text-sm text-[var(--tf-faint)]">Syncing with server…</p>
+              <p className="mb-4 text-sm text-[var(--tf-muted)]">Syncing with server…</p>
             ) : null}
             <Outlet key={location.pathname} />
           </main>

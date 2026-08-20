@@ -36,8 +36,8 @@ function ProjectsPage() {
     <PageShell>
       <SectionHeading
         eyebrow="Projects"
-        title="Company project portfolio"
-        description="Create, select, and manage projects. Selecting a project drives the board and tasks views."
+        title="Projects"
+        description="Organize delivery by project. The selected project powers your board and task views."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -54,7 +54,7 @@ function ProjectsPage() {
                   "rounded-2xl border p-5 transition duration-200",
                   selectedProjectId === project.id
                     ? "border-[var(--tf-border-strong)] bg-[var(--tf-accent-soft)]"
-                    : "border-[var(--tf-border)] bg-white/[0.03]",
+                    : "border-[var(--tf-border)] bg-[var(--tf-bg-1)]",
                 ].join(" ")}
               >
                 <button
@@ -64,7 +64,7 @@ function ProjectsPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="tf-display text-lg font-bold text-white">
+                      <p className="tf-display text-lg font-bold text-[var(--tf-ink)]">
                         {project.name}
                       </p>
                       <p className="mt-2 text-sm text-[var(--tf-muted)]">
@@ -79,18 +79,18 @@ function ProjectsPage() {
                   </div>
                   <div className="mt-5 grid grid-cols-3 gap-3 text-sm text-[var(--tf-muted)]">
                     <div>
-                      <p className="text-[var(--tf-faint)]">Tasks</p>
-                      <p className="mt-1 font-semibold text-white">{count}</p>
+                      <p className="text-[var(--tf-muted)]">Tasks</p>
+                      <p className="mt-1 font-semibold text-[var(--tf-ink)]">{count}</p>
                     </div>
                     <div>
-                      <p className="text-[var(--tf-faint)]">Due</p>
-                      <p className="mt-1 font-semibold text-white">
+                      <p className="text-[var(--tf-muted)]">Due</p>
+                      <p className="mt-1 font-semibold text-[var(--tf-ink)]">
                         {formatDate(project.dueDate)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[var(--tf-faint)]">Lead</p>
-                      <p className="mt-1 font-semibold text-white">
+                      <p className="text-[var(--tf-muted)]">Lead</p>
+                      <p className="mt-1 font-semibold text-[var(--tf-ink)]">
                         {project.lead}
                       </p>
                     </div>
@@ -101,7 +101,7 @@ function ProjectsPage() {
                   <Link
                     to="/app/board"
                     onClick={() => setSelectedProjectId(project.id)}
-                    className="inline-flex rounded-xl border border-[var(--tf-border)] bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white hover:bg-white/[0.08]"
+                    className="inline-flex rounded-xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] px-3 py-2 text-xs font-semibold text-[var(--tf-ink)] hover:bg-[var(--tf-accent-soft)]"
                   >
                     Open board
                   </Link>

@@ -14,7 +14,7 @@ function NotFoundPage() {
               That page does not exist
             </h1>
             <p className="mt-3 text-[var(--tf-muted)]">
-              The route you opened is outside the TaskFlow frontend shell.
+              The page you requested is not available in TaskFlow.
             </p>
             <div className="mt-8 flex justify-center gap-3">
               <Link
@@ -25,7 +25,7 @@ function NotFoundPage() {
               </Link>
               <Link
                 to="/app/dashboard"
-                className="inline-flex items-center justify-center rounded-xl border border-[var(--tf-border)] bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+                className="inline-flex items-center justify-center rounded-xl border border-[var(--tf-border)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--tf-ink)] transition hover:bg-[var(--tf-accent-soft)]"
               >
                 Open dashboard
               </Link>

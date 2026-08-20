@@ -30,7 +30,7 @@ function KnowledgeBasePage() {
   const [busy, setBusy] = useState(false);
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState("");
-  const [question, setQuestion] = useState("How does our leave policy work?");
+  const [question, setQuestion] = useState("What is our remote work policy?");
   const [history, setHistory] = useState([]);
 
   const loadDocuments = async () => {
@@ -142,9 +142,9 @@ function KnowledgeBasePage() {
   return (
     <PageShell>
       <SectionHeading
-        eyebrow="RAG knowledge base"
-        title="Company documents, grounded answers"
-        description="Upload PDF or DOCX files. TaskFlow chunks them, stores embeddings in pgvector, and answers questions using only those sources."
+        eyebrow="Knowledge"
+        title="Company knowledge base"
+        description="Upload policies, handbooks, and manuals. Ask questions and get answers grounded in your documents, with clear source references."
       />
 
       {error ? (
@@ -154,10 +154,10 @@ function KnowledgeBasePage() {
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-6">
           <Card className="p-6">
-            <p className="tf-eyebrow">Ingest</p>
-            <h3 className="mt-2 text-lg font-semibold text-white">Upload a document</h3>
+            <p className="tf-eyebrow">Upload</p>
+            <h3 className="mt-2 text-lg font-semibold text-[var(--tf-ink)]">Add a document</h3>
             <p className="mt-2 text-sm text-[var(--tf-muted)]">
-              PDF, DOCX, TXT, or Markdown. A 2-page file should become ready in about 10–20 seconds.
+              Supports PDF, DOCX, TXT, and Markdown. Processing usually finishes within a few seconds.
             </p>
             <Field label="File">
               <input
@@ -168,7 +168,7 @@ function KnowledgeBasePage() {
               />
             </Field>
             {file ? (
-              <p className="mt-2 text-sm text-[var(--tf-faint)]">
+              <p className="mt-2 text-sm text-[var(--tf-muted)]">
                 {file.name} · {formatBytes(file.size)}
               </p>
             ) : null}
@@ -186,7 +186,7 @@ function KnowledgeBasePage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="tf-eyebrow">Library</p>
-                <h3 className="mt-2 text-lg font-semibold text-white">
+                <h3 className="mt-2 text-lg font-semibold text-[var(--tf-ink)]">
                   {documents.length} document{documents.length === 1 ? "" : "s"}
                 </h3>
               </div>
@@ -194,8 +194,8 @@ function KnowledgeBasePage() {
             </div>
             <div className="mt-4 space-y-3">
               {documents.length === 0 ? (
-                <p className="text-sm text-[var(--tf-faint)]">
-                  No documents yet. Upload a leave policy or handbook to try RAG.
+                <p className="text-sm text-[var(--tf-muted)]">
+                  No documents yet. Upload a policy or handbook to get started.
                 </p>
               ) : (
                 documents.map((doc) => (
@@ -205,8 +205,8 @@ function KnowledgeBasePage() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-white">{doc.original_name}</p>
-                        <p className="mt-1 text-xs text-[var(--tf-faint)]">
+                        <p className="font-semibold text-[var(--tf-ink)]">{doc.original_name}</p>
+                        <p className="mt-1 text-xs text-[var(--tf-muted)]">
                           {formatBytes(doc.size_bytes)} · {doc.chunk_count} chunks
                           {doc.uploaded_by_name ? ` · ${doc.uploaded_by_name}` : ""}
                         </p>
@@ -238,14 +238,14 @@ function KnowledgeBasePage() {
 
         <Card className="flex min-h-[640px] flex-col p-6">
           <p className="tf-eyebrow">Ask</p>
-          <h3 className="mt-2 text-lg font-semibold text-white">Grounded Q&A</h3>
+          <h3 className="mt-2 text-lg font-semibold text-[var(--tf-ink)]">Ask documents</h3>
           <p className="mt-2 text-sm text-[var(--tf-muted)]">
-            Answers include source filenames so you can verify the policy text.
+            Answers include source filenames so your team can verify the original text.
           </p>
           <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-auto">
             {history.length === 0 ? (
-              <p className="text-sm text-[var(--tf-faint)]">
-                Try: “How does our leave policy work?” after a document is marked ready.
+              <p className="text-sm text-[var(--tf-muted)]">
+                Ask anything about an uploaded document once it shows as ready.
               </p>
             ) : (
               history.map((item, index) => (
@@ -254,26 +254,26 @@ function KnowledgeBasePage() {
                   className={[
                     "rounded-xl px-3 py-2 text-sm",
                     item.role === "user"
-                      ? "ml-8 bg-[var(--tf-accent-soft)] text-white"
-                      : "mr-4 bg-white/[0.04] text-[var(--tf-muted)]",
+                      ? "ml-8 bg-[var(--tf-accent-soft)] text-[var(--tf-ink)]"
+                      : "mr-4 bg-[var(--tf-bg-1)] text-[var(--tf-muted)]",
                   ].join(" ")}
                 >
                   <p className="whitespace-pre-wrap">{item.content}</p>
                   {item.sources?.length ? (
                     <div className="mt-3 space-y-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--tf-faint)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--tf-muted)]">
                         Sources
                       </p>
                       {item.sources.slice(0, 2).map((source) => (
                         <div
                           key={source.chunk_id}
-                          className="rounded-lg border border-white/10 p-2 text-xs"
+                          className="rounded-lg border border-[var(--tf-border)] bg-white p-2 text-xs"
                         >
-                          <p className="font-semibold text-white">
+                          <p className="font-semibold text-[var(--tf-ink)]">
                             {source.filename}
                             {source.page ? ` · p.${source.page}` : ""}
                           </p>
-                          <p className="mt-1 line-clamp-2 text-[var(--tf-faint)]">
+                          <p className="mt-1 line-clamp-2 text-[var(--tf-muted)]">
                             {source.excerpt}
                           </p>
                         </div>
@@ -290,16 +290,16 @@ function KnowledgeBasePage() {
                 rows={3}
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                placeholder={asking ? "Searching the knowledge base…" : "Ask about a policy"}
+                placeholder={asking ? "Searching documents…" : "Ask a question"}
                 disabled={asking}
               />
             </Field>
             <Button type="submit" variant="primary" disabled={asking || !hasReadyDoc}>
-              {asking ? "Retrieving…" : "Ask knowledge base"}
+              {asking ? "Searching…" : "Ask"}
             </Button>
             {!hasReadyDoc ? (
-              <p className="text-xs text-[var(--tf-faint)]">
-                Wait until a document is ready. Asking before ingest does not use the PDF.
+              <p className="text-xs text-[var(--tf-muted)]">
+                Upload a document and wait until it is ready before asking.
               </p>
             ) : null}
           </form>

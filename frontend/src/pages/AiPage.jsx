@@ -90,13 +90,13 @@ function AiPage() {
   return (
     <PageShell>
       <SectionHeading
-        eyebrow="Phase 2"
-        title="TaskFlow AI workspace"
-        description="Generate tasks, estimate work, plan sprints, transcribe meetings, review code, and predict delivery risk. Use Knowledge for RAG Q&A over uploaded PDFs."
+        eyebrow="AI Assist"
+        title="Accelerate delivery with AI"
+        description="Generate tasks, estimate effort, plan sprints, summarize meetings, and surface delivery risk — then open Knowledge to ask your company documents."
         actions={
           <Link
             to="/app/knowledge"
-            className="rounded-xl border border-[var(--tf-border)] px-4 py-2.5 text-sm font-semibold text-white"
+            className="rounded-xl border border-[var(--tf-border)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--tf-ink)] transition hover:border-[var(--tf-border-strong)]"
           >
             Open knowledge base
           </Link>
@@ -187,7 +187,7 @@ function AiPage() {
             {(generated?.tasks || []).map((task) => (
               <div key={task.title} className="rounded-xl border border-[var(--tf-border)] p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-white">{task.title}</p>
+                  <p className="font-semibold text-[var(--tf-ink)]">{task.title}</p>
                   <Badge tone="muted">{task.group}</Badge>
                   <Badge>{task.priority}</Badge>
                   <Badge tone="sky">{task.estimated_hours}h</Badge>
@@ -222,7 +222,7 @@ function AiPage() {
           {estimate ? (
             <div className="mt-4 space-y-2 text-sm text-[var(--tf-muted)]">
               <p>
-                <strong className="text-white">{estimate.estimated_hours} hours</strong> ·{" "}
+                <strong className="text-[var(--tf-ink)]">{estimate.estimated_hours} hours</strong> ·{" "}
                 {estimate.confidence} confidence
               </p>
               <p>{estimate.notes}</p>
@@ -256,13 +256,13 @@ function AiPage() {
           {description ? (
             <div className="mt-4 space-y-3 text-sm text-[var(--tf-muted)]">
               <p className="whitespace-pre-wrap">{description.description}</p>
-              <p className="font-semibold text-white">Requirements</p>
+              <p className="font-semibold text-[var(--tf-ink)]">Requirements</p>
               <ul className="list-disc pl-5">
                 {(description.requirements || []).map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <p className="font-semibold text-white">Acceptance criteria</p>
+              <p className="font-semibold text-[var(--tf-ink)]">Acceptance criteria</p>
               <ul className="list-disc pl-5">
                 {(description.acceptance_criteria || []).map((item) => (
                   <li key={item}>{item}</li>
@@ -282,7 +282,7 @@ function AiPage() {
               onChange={(event) => setSprintHours(event.target.value)}
             />
           </Field>
-          <p className="mt-3 text-sm text-[var(--tf-faint)]">
+          <p className="mt-3 text-sm text-[var(--tf-muted)]">
             Uses {members.length} teammates and {projectTasks.filter((task) => task.status !== "Done").length} pending tasks.
           </p>
           <Button
@@ -308,7 +308,7 @@ function AiPage() {
               <p className="text-sm text-[var(--tf-muted)]">{sprint.notes}</p>
               {(sprint.allocations || []).map((item) => (
                 <div key={item.developer} className="rounded-xl border border-[var(--tf-border)] p-4">
-                  <p className="font-semibold text-white">
+                  <p className="font-semibold text-[var(--tf-ink)]">
                     {item.developer} · {item.total_hours ?? "—"}h
                   </p>
                   <ul className="mt-2 list-disc pl-5 text-sm text-[var(--tf-muted)]">

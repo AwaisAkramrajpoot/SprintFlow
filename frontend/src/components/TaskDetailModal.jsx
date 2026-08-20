@@ -101,32 +101,32 @@ function TaskDetailModal() {
             </Field>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
+              <div className="rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4">
                 <p className="tf-eyebrow">Due</p>
-                <p className="mt-2 font-semibold text-white">
+                <p className="mt-2 font-semibold text-[var(--tf-ink)]">
                   {formatDate(activeTask.dueDate)}
                 </p>
                 <p className="text-sm text-[var(--tf-muted)]">
                   {relativeDueLabel(activeTask.dueDate)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
+              <div className="rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4">
                 <p className="tf-eyebrow">Comments</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
+                <p className="mt-2 text-2xl font-semibold text-[var(--tf-ink)]">
                   {comments.length}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
+              <div className="rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4">
                 <p className="tf-eyebrow">Attachments</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
+                <p className="mt-2 text-2xl font-semibold text-[var(--tf-ink)]">
                   {attachments.length}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
+            <div className="rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-white">Comments</p>
+                <p className="text-sm font-semibold text-[var(--tf-ink)]">Comments</p>
                 <Button
                   variant="secondary"
                   className="!px-3 !py-1.5 !text-xs"
@@ -147,10 +147,10 @@ function TaskDetailModal() {
                 </Button>
               </div>
               {commentSummary ? (
-                <div className="mt-3 rounded-xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] p-3 text-sm text-[var(--tf-muted)]">
-                  <p><strong className="text-white">Issue:</strong> {commentSummary.main_issue}</p>
-                  <p className="mt-1"><strong className="text-white">Solution:</strong> {commentSummary.proposed_solution}</p>
-                  <p className="mt-1"><strong className="text-white">Status:</strong> {commentSummary.current_status}</p>
+                <div className="mt-3 rounded-xl border border-[var(--tf-border)] bg-white p-3 text-sm text-[var(--tf-muted)]">
+                  <p><strong className="text-[var(--tf-ink)]">Issue:</strong> {commentSummary.main_issue}</p>
+                  <p className="mt-1"><strong className="text-[var(--tf-ink)]">Solution:</strong> {commentSummary.proposed_solution}</p>
+                  <p className="mt-1"><strong className="text-[var(--tf-ink)]">Status:</strong> {commentSummary.current_status}</p>
                 </div>
               ) : null}
               <div className="mt-4 space-y-3">
@@ -160,17 +160,17 @@ function TaskDetailModal() {
                   comments.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] p-3"
+                      className="rounded-xl border border-[var(--tf-border)] bg-white p-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-[var(--tf-ink)]">
                             {item.author}
                           </p>
                           <p className="mt-1 text-sm text-[var(--tf-muted)]">
                             {item.content}
                           </p>
-                          <p className="mt-2 text-xs text-[var(--tf-faint)]">
+                          <p className="mt-2 text-xs text-[var(--tf-muted)]">
                             {formatDateTime(item.createdAt)}
                           </p>
                         </div>
@@ -200,8 +200,8 @@ function TaskDetailModal() {
               </form>
             </div>
 
-            <div className="rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-4">
-              <p className="text-sm font-semibold text-white">Attachments</p>
+            <div className="rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4">
+              <p className="text-sm font-semibold text-[var(--tf-ink)]">Attachments</p>
               <div className="mt-4 space-y-2">
                 {attachments.length === 0 ? (
                   <p className="text-sm text-[var(--tf-muted)]">No files attached.</p>
@@ -239,7 +239,7 @@ function TaskDetailModal() {
           </div>
 
           <aside className="space-y-4">
-            <div className="space-y-3 rounded-2xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] p-4">
+            <div className="space-y-3 rounded-2xl border border-[var(--tf-border)] bg-white p-4">
               <Field label="Status">
                 <Select
                   value={activeTask.status}
@@ -290,9 +290,9 @@ function TaskDetailModal() {
               </Field>
             </div>
 
-            <div className="rounded-2xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] p-4">
+            <div className="rounded-2xl border border-[var(--tf-border)] bg-white p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-white">Checklist</p>
+                <p className="text-sm font-semibold text-[var(--tf-ink)]">Checklist</p>
                 <Badge tone="muted">
                   {doneCount}/{checklist.length}
                 </Badge>
@@ -300,7 +300,7 @@ function TaskDetailModal() {
               <ul className="mt-3 space-y-2">
                 {checklist.map((item) => (
                   <li key={item.id}>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] px-3 py-2 text-sm text-[var(--tf-muted)]">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] px-3 py-2 text-sm text-[var(--tf-muted)]">
                       <input
                         type="checkbox"
                         checked={item.done}

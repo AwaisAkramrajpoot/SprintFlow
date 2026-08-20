@@ -16,8 +16,8 @@ function BoardPage() {
     <PageShell noAnimation>
       <SectionHeading
         eyebrow="Board"
-        title="Kanban view with drag and drop"
-        description="Move tasks between Backlog, In Progress, Review, and Done. Changes sync live across teammates on this board."
+        title="Board"
+        description="Drag work across Backlog, In Progress, Review, and Done. Updates sync for everyone on this board."
       />
 
       <Card className="p-5">

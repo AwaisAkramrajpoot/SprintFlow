@@ -49,7 +49,7 @@ function SearchPage() {
       <SectionHeading
         eyebrow="Search"
         title="Full-text and natural-language search"
-        description="Keyword search across titles, or ask in plain English: “high priority tasks assigned to Awais due this week”."
+        description="Search by keyword, or describe what you need in plain English — for example, high-priority work due this week."
       />
 
       <Card className="p-5">
@@ -84,7 +84,7 @@ function SearchPage() {
             ) : null}
           </div>
         </form>
-        <p className="mt-3 text-sm text-[var(--tf-faint)]">
+        <p className="mt-3 text-sm text-[var(--tf-muted)]">
           {nlError ||
             (nlMode
               ? nlResult
@@ -106,10 +106,10 @@ function SearchPage() {
               key={task.id}
               type="button"
               onClick={() => openTask(task.id)}
-              className="tf-hover-lift rounded-2xl border border-[var(--tf-border)] bg-white/[0.03] p-5 text-left"
+              className="tf-hover-lift rounded-2xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-5 text-left"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <p className="tf-display text-lg font-bold text-white">
+                <p className="tf-display text-lg font-bold text-[var(--tf-ink)]">
                   {task.title}
                 </p>
                 <Badge tone="muted">{task.status}</Badge>
@@ -120,7 +120,7 @@ function SearchPage() {
               <p className="mt-2 text-sm text-[var(--tf-muted)]">
                 {task.description}
               </p>
-              <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--tf-faint)]">
+              <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--tf-muted)]">
                 <span>{project?.name ?? "Unknown project"}</span>
                 <span>{task.assignee}</span>
                 <span>{formatDate(task.dueDate || task.due_date)}</span>

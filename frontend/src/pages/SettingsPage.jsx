@@ -58,7 +58,7 @@ function SettingsPage() {
       <SectionHeading
         eyebrow="Settings"
         title="Company settings and member management"
-        description="Owner/Admin only — update company profile, invite members, and manage RBAC roles (Owner, Admin, Manager, Member)."
+        description="Manage your company profile, invite teammates, and control access with Owner, Admin, Manager, and Member roles."
       />
 
       {message ? (
@@ -165,7 +165,7 @@ function SettingsPage() {
 
         <div className="mt-5 overflow-x-auto rounded-2xl border border-[var(--tf-border)]">
           <table className="w-full min-w-[720px] text-left">
-            <thead className="bg-white/[0.03] text-[0.7rem] uppercase tracking-[0.22em] text-[var(--tf-faint)]">
+            <thead className="bg-[var(--tf-bg-1)] text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--tf-ink)]">
               <tr>
                 <th className="px-4 py-4">Name</th>
                 <th className="px-4 py-4">Email</th>
@@ -178,9 +178,9 @@ function SettingsPage() {
               {members.map((member) => (
                 <tr
                   key={member.id}
-                  className="border-t border-[var(--tf-border)] bg-[rgba(6,16,24,0.35)]"
+                  className="border-t border-[var(--tf-border)] bg-white"
                 >
-                  <td className="px-4 py-4 font-semibold text-white">
+                  <td className="px-4 py-4 font-semibold text-[var(--tf-ink)]">
                     {member.name}
                   </td>
                   <td className="px-4 py-4 text-[var(--tf-muted)]">{member.email}</td>
@@ -211,7 +211,7 @@ function SettingsPage() {
                   </td>
                   <td className="px-4 py-4">
                     {member.role === "Owner" ? (
-                      <span className="text-xs text-[var(--tf-faint)]">Protected</span>
+                      <span className="text-xs text-[var(--tf-muted)]">Protected</span>
                     ) : (
                       <Button
                         variant="danger"
@@ -233,9 +233,9 @@ function SettingsPage() {
       </Card>
 
       <Card className="p-6">
-        <p className="text-sm font-semibold text-white">Demo utilities</p>
+        <p className="text-sm font-semibold text-[var(--tf-ink)]">Workspace data</p>
         <p className="mt-2 text-sm text-[var(--tf-muted)]">
-          Reset local workspace seed data stored in the browser.
+          Clear locally cached workspace data stored in this browser.
         </p>
         <Button
           variant="secondary"
@@ -244,11 +244,11 @@ function SettingsPage() {
             if (window.confirm("Reset all local TaskFlow workspace data?")) {
               resetWorkspace();
               setCompanyForm({ name: "Northstar Studio", plan: "Pro" });
-              setMessage("Workspace reset to seed data.");
+              setMessage("Workspace data was reset.");
             }
           }}
         >
-          Reset workspace data
+          Reset local data
         </Button>
       </Card>
     </PageShell>

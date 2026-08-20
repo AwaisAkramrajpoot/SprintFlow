@@ -120,7 +120,7 @@ function TasksPage() {
       <SectionHeading
         eyebrow="Tasks"
         title={`Tasks · ${currentProject?.name ?? "No project"}`}
-        description="Search, filter by status/priority/assignee, and create work items. Task detail opens with comments, attachments, and assignee controls."
+        description="Filter by status, priority, or assignee. Open any task for comments, files, and ownership."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -156,26 +156,26 @@ function TasksPage() {
           </div>
 
           {tasksQuery.isFetching ? (
-            <p className="mt-3 text-xs text-[var(--tf-faint)]">
+            <p className="mt-3 text-xs text-[var(--tf-muted)]">
               Syncing ({filteredTasks.length} results)…
             </p>
           ) : null}
 
           <div className="mt-5 overflow-x-auto rounded-2xl border border-[var(--tf-border)]">
             <table className="w-full min-w-[640px] text-left">
-              <thead className="bg-white/[0.03] text-[0.7rem] uppercase tracking-[0.22em] text-[var(--tf-faint)]">
+              <thead className="bg-[var(--tf-bg-1)] text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[var(--tf-muted)]">
                 <tr>
-                  <th className="px-4 py-4">Task</th>
-                  <th className="px-4 py-4">Status</th>
-                  <th className="px-4 py-4">Priority</th>
-                  <th className="px-4 py-4">Due</th>
+                  <th className="px-4 py-4 text-[var(--tf-ink)]">Task</th>
+                  <th className="px-4 py-4 text-[var(--tf-ink)]">Status</th>
+                  <th className="px-4 py-4 text-[var(--tf-ink)]">Priority</th>
+                  <th className="px-4 py-4 text-[var(--tf-ink)]">Due</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTasks.map((task) => (
                   <tr
                     key={task.id}
-                    className="border-t border-[var(--tf-border)] bg-[rgba(6,16,24,0.35)] transition hover:bg-white/[0.03]"
+                    className="border-t border-[var(--tf-border)] bg-white transition hover:bg-[var(--tf-bg-1)]"
                   >
                     <td className="px-4 py-4">
                       <button
@@ -183,7 +183,7 @@ function TasksPage() {
                         onClick={() => openTask(task.id)}
                         className="text-left"
                       >
-                        <p className="font-semibold text-white">{task.title}</p>
+                        <p className="font-semibold text-[var(--tf-ink)]">{task.title}</p>
                         <p className="mt-1 text-sm text-[var(--tf-muted)]">
                           {task.assignee} · {(task.comments || []).length} comments
                         </p>
@@ -310,11 +310,11 @@ function TasksPage() {
 
             <Field label="Images & files">
               <div className="space-y-3">
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--tf-border)] bg-white/[0.02] px-4 py-6 text-center transition hover:border-[var(--tf-border-strong)] hover:bg-white/[0.04]">
-                  <span className="text-sm font-medium text-white">
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--tf-border)] bg-[var(--tf-bg-1)] px-4 py-6 text-center transition hover:border-[var(--tf-border-strong)] hover:bg-[var(--tf-bg-1)]">
+                  <span className="text-sm font-medium text-[var(--tf-ink)]">
                     Click to add images or files
                   </span>
-                  <span className="mt-1 text-xs text-[var(--tf-faint)]">
+                  <span className="mt-1 text-xs text-[var(--tf-muted)]">
                     PNG, JPG, PDF, DOC, TXT and more
                   </span>
                   <input
@@ -331,7 +331,7 @@ function TasksPage() {
                     {filePreviews.map(({ file, preview }, index) => (
                       <li
                         key={`${file.name}-${index}`}
-                        className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] p-3"
+                        className="flex items-center gap-3 rounded-xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-3"
                       >
                         {preview ? (
                           <img
@@ -340,20 +340,20 @@ function TasksPage() {
                             className="h-12 w-12 rounded-lg border border-[var(--tf-border)] object-cover"
                           />
                         ) : (
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/[0.05] text-xs text-[var(--tf-faint)]">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--tf-accent-soft)] text-xs text-[var(--tf-muted)]">
                             FILE
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-white">{file.name}</p>
-                          <p className="text-xs text-[var(--tf-faint)]">
+                          <p className="truncate text-sm font-medium text-[var(--tf-ink)]">{file.name}</p>
+                          <p className="text-xs text-[var(--tf-muted)]">
                             {formatFileSize(file.size)}
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeSelectedFile(index)}
-                          className="rounded-lg px-2 py-1 text-xs text-[var(--tf-faint)] transition hover:bg-white/5 hover:text-white"
+                          className="rounded-lg px-2 py-1 text-xs text-[var(--tf-muted)] transition hover:bg-[var(--tf-accent-soft)] hover:text-[var(--tf-ink)]"
                         >
                           Remove
                         </button>

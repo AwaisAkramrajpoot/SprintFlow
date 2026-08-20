@@ -35,7 +35,7 @@ function CardBody({ task }) {
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[0.95rem] font-semibold text-white">{task.title}</p>
+          <p className="text-[0.95rem] font-semibold text-[var(--tf-ink)]">{task.title}</p>
           <p className="mt-2 line-clamp-2 text-sm text-[var(--tf-muted)]">
             {task.description}
           </p>
@@ -45,12 +45,12 @@ function CardBody({ task }) {
         </Badge>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-[var(--tf-faint)]">
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-[var(--tf-muted)]">
         <span>{task.assignee}</span>
         <span>{relativeDueLabel(task.dueDate)}</span>
       </div>
 
-      <div className="mt-3 flex gap-3 text-[11px] uppercase tracking-[0.16em] text-[var(--tf-faint)]">
+      <div className="mt-3 flex gap-3 text-[11px] uppercase tracking-[0.16em] text-[var(--tf-muted)]">
         <span>{(task.comments || []).length} comments</span>
         <span>{(task.attachments || []).length} files</span>
       </div>
@@ -98,7 +98,7 @@ function TaskCard({ task, onOpen }) {
         onOpen(task.id);
       }}
       className={[
-        "tf-kanban-card cursor-grab rounded-2xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.75)] p-4 active:cursor-grabbing",
+        "tf-kanban-card cursor-grab rounded-2xl border border-[var(--tf-border)] bg-white p-4 shadow-[var(--tf-shadow-soft)] active:cursor-grabbing",
         isDragging ? "tf-kanban-card--dragging" : "",
       ].join(" ")}
     >
@@ -109,7 +109,7 @@ function TaskCard({ task, onOpen }) {
 
 function OverlayCard({ task }) {
   return (
-    <article className="tf-kanban-card tf-kanban-card--dragging box-border h-full w-full cursor-grabbing rounded-2xl border border-[var(--tf-border-strong)] bg-[rgba(6,16,24,0.95)] p-4 shadow-2xl ring-1 ring-[var(--tf-border-strong)]">
+    <article className="tf-kanban-card tf-kanban-card--dragging box-border h-full w-full cursor-grabbing rounded-2xl border border-[var(--tf-border-strong)] bg-white p-4 shadow-[var(--tf-shadow)] ring-1 ring-[var(--tf-border-strong)]">
       <CardBody task={task} />
     </article>
   );
@@ -125,14 +125,14 @@ function DroppableColumn({ id, children, title, count, isOver }) {
     <div
       ref={setNodeRef}
       className={[
-        "flex min-h-[420px] flex-col rounded-[1.5rem] border border-[var(--tf-border)] bg-white/[0.03] p-4 transition duration-200",
+        "flex min-h-[420px] flex-col rounded-[1.5rem] border border-[var(--tf-border)] bg-[var(--tf-bg-1)]/80 p-4 transition duration-200",
         isOver ? "border-[var(--tf-border-strong)] bg-[var(--tf-accent-soft)]" : "",
       ].join(" ")}
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h3 className="tf-eyebrow">{title}</h3>
-          <p className="mt-1 text-sm text-[var(--tf-faint)]">{count} tasks</p>
+          <p className="mt-1 text-sm text-[var(--tf-muted)]">{count} tasks</p>
         </div>
         <Badge tone="muted">{count}</Badge>
       </div>
@@ -281,7 +281,7 @@ function KanbanBoard() {
             <h2 className="tf-title mt-2 text-2xl md:text-[1.85rem]">
               {currentProject?.name ?? "No project selected"}
             </h2>
-            <p className="mt-1 text-sm text-[var(--tf-faint)]">
+            <p className="mt-1 text-sm text-[var(--tf-muted)]">
               Drag a card to another column to update its status.
             </p>
           </div>
@@ -315,7 +315,7 @@ function KanbanBoard() {
               </SortableContext>
 
               {columnItems[status].length === 0 ? (
-                <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-[var(--tf-border)] px-4 py-10 text-center text-sm text-[var(--tf-faint)]">
+                <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-[var(--tf-border)] px-4 py-10 text-center text-sm text-[var(--tf-muted)]">
                   Drop tasks here
                 </div>
               ) : null}

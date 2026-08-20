@@ -14,7 +14,7 @@ function NotificationsPage() {
       <SectionHeading
         eyebrow="Notifications"
         title="Company alerts and activity feed"
-        description="Assignments, board updates, comments, and digests — with unread counts and mark-as-read actions."
+        description="Stay on top of assignments, comments, and board updates across your workspace."
         actions={[
           <Button key="mark" variant="secondary" onClick={markAllNotificationsRead}>
             Mark all read ({unreadCount})
@@ -28,7 +28,7 @@ function NotificationsPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="tf-display text-lg font-bold text-white">
+                  <p className="tf-display text-lg font-bold text-[var(--tf-ink)]">
                     {notification.title}
                   </p>
                   {notification.unread ? <Badge tone="sky">Unread</Badge> : null}
@@ -37,7 +37,7 @@ function NotificationsPage() {
                   ) : null}
                 </div>
                 <p className="text-[var(--tf-muted)]">{notification.message}</p>
-                <p className="text-sm text-[var(--tf-faint)]">{notification.time}</p>
+                <p className="text-sm text-[var(--tf-muted)]">{notification.time}</p>
               </div>
               {notification.unread ? (
                 <Button

@@ -61,15 +61,19 @@ function RegisterPage() {
     <PageShell>
       <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <Card className="tf-stagger p-8 md:p-10">
+          <Link to="/" className="mb-6 inline-flex items-center gap-3">
+            <span className="tf-brand-mark h-10 w-10 text-xs">TF</span>
+            <span className="tf-display text-lg font-bold text-[var(--tf-ink)]">TaskFlow AI</span>
+          </Link>
           <p className="tf-eyebrow">Create workspace</p>
           <h1 className="tf-title mt-4 text-[2.4rem] md:text-[3rem]">
             Start your company or join a team
           </h1>
           <p className="mt-3 text-[1.02rem] text-[var(--tf-muted)]">
-            Create as Owner, or join an existing company as Member.
+            Set up a new company workspace, or join your team with an invite.
           </p>
 
-          <div className="mt-6 flex gap-2 rounded-xl border border-[var(--tf-border)] bg-white/[0.03] p-1.5">
+          <div className="mt-6 flex gap-2 rounded-xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-1.5">
             {[
               ["create", "Create company"],
               ["join", "Join company"],
@@ -81,8 +85,8 @@ function RegisterPage() {
                 className={[
                   "flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition duration-200",
                   mode === value
-                    ? "bg-[var(--tf-accent)] text-[var(--tf-accent-ink)]"
-                    : "text-[var(--tf-muted)] hover:bg-white/[0.04] hover:text-white",
+                    ? "bg-[var(--tf-accent)] text-white shadow-[0_8px_18px_rgba(15,143,106,0.25)]"
+                    : "text-[var(--tf-muted)] hover:bg-white hover:text-[var(--tf-ink)]",
                 ].join(" ")}
               >
                 {label}
@@ -129,23 +133,21 @@ function RegisterPage() {
               />
             </Field>
 
-          <Field
-            label={mode === "create" ? "Company name" : "Invite token"}
-          >
-            <TextInput
-              value={mode === "create" ? formData.company : formData.inviteToken}
-              onChange={(event) =>
-                setFormData((current) =>
-                  mode === "create"
-                    ? { ...current, company: event.target.value }
-                    : { ...current, inviteToken: event.target.value }
-                )
-              }
-              placeholder={
-                mode === "create" ? "Northstar Studio" : "Paste invite token from email"
-              }
-            />
-          </Field>
+            <Field label={mode === "create" ? "Company name" : "Invite token"}>
+              <TextInput
+                value={mode === "create" ? formData.company : formData.inviteToken}
+                onChange={(event) =>
+                  setFormData((current) =>
+                    mode === "create"
+                      ? { ...current, company: event.target.value }
+                      : { ...current, inviteToken: event.target.value }
+                  )
+                }
+                placeholder={
+                  mode === "create" ? "Northstar Studio" : "Paste invite token from email"
+                }
+              />
+            </Field>
 
             {error ? (
               <p className="text-sm text-[var(--tf-danger)]">{error}</p>
@@ -162,30 +164,31 @@ function RegisterPage() {
 
           <p className="mt-6 text-sm text-[var(--tf-muted)]">
             Already have an account?{" "}
-            <Link to="/login" className="text-[var(--tf-accent)] hover:underline">
+            <Link to="/login" className="font-semibold text-[var(--tf-accent)] hover:underline">
               Sign in
             </Link>
           </p>
         </Card>
 
-        <Card className="p-8 md:p-10">
-          <p className="tf-eyebrow">Onboarding</p>
-          <div className="tf-stagger mt-5 space-y-3">
+        <div className="rounded-[1.75rem] border border-[var(--tf-border)] bg-white p-8 shadow-[var(--tf-shadow-soft)] md:p-10">
+          <p className="tf-eyebrow">Getting started</p>
+          <h2 className="tf-title mt-3 text-2xl">Everything your team needs</h2>
+          <div className="tf-stagger mt-6 space-y-3">
             {[
-              "Owner, Admin, Manager, Member roles",
-              "Company invite handling",
-              "JWT login handoff next",
-              "Workspace creation confirmation",
+              "Role-based access for Owners, Admins, Managers, and Members",
+              "Invite teammates and manage company membership",
+              "Shared Kanban boards with live updates",
+              "Company knowledge base for policies and documents",
             ].map((item) => (
               <div
                 key={item}
-                className="rounded-xl border border-[var(--tf-border)] bg-white/[0.03] p-4 text-sm text-[var(--tf-muted)]"
+                className="rounded-xl border border-[var(--tf-border)] bg-[var(--tf-bg-1)] p-4 text-sm font-medium text-[var(--tf-muted)]"
               >
                 {item}
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       </div>
     </PageShell>
   );

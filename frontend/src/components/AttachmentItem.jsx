@@ -7,7 +7,7 @@ import {
 
 function FileIcon() {
   return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--tf-faint)]">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--tf-bg-1)] text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--tf-muted)]">
       FILE
     </div>
   );
@@ -23,7 +23,7 @@ function AttachmentItem({ attachment, onRemove }) {
     .join(" · ");
 
   return (
-    <div className="rounded-xl border border-[var(--tf-border)] bg-[rgba(6,16,24,0.55)] p-3">
+    <div className="rounded-xl border border-[var(--tf-border)] bg-white p-3 shadow-[var(--tf-shadow-soft)]">
       <div className="flex items-start gap-3">
         {isImage && url ? (
           <a href={url} target="_blank" rel="noreferrer" className="shrink-0">
@@ -43,14 +43,14 @@ function AttachmentItem({ attachment, onRemove }) {
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-medium text-[var(--tf-accent)] hover:underline"
+              className="text-sm font-semibold text-[var(--tf-accent)] hover:underline"
             >
               {label}
             </a>
           ) : (
-            <p className="text-sm font-medium text-white">{label}</p>
+            <p className="text-sm font-semibold text-[var(--tf-ink)]">{label}</p>
           )}
-          <p className="mt-1 text-xs text-[var(--tf-faint)]">{meta}</p>
+          <p className="mt-1 text-xs font-medium text-[var(--tf-muted)]">{meta}</p>
           {isImage && url ? (
             <p className="mt-1 text-xs text-[var(--tf-muted)]">Click image to open full size</p>
           ) : null}
@@ -60,7 +60,7 @@ function AttachmentItem({ attachment, onRemove }) {
           <button
             type="button"
             onClick={() => onRemove(attachment.id)}
-            className="shrink-0 text-xs text-[var(--tf-danger)] hover:brightness-125"
+            className="shrink-0 text-xs font-semibold text-[var(--tf-danger)] hover:underline"
           >
             Remove
           </button>
